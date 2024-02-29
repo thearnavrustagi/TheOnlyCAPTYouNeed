@@ -56,11 +56,28 @@ class Phonemizer(object):
         """
         takes a word, and returns a list of phonemes
         """
+        vowels = {'ा','ि','ी','ु','ू','े','ै','ो','ौ'}
+        vow2 = {'ं','ँ'}
+        halant = '्'
+        tokens = []
+        token = ''
+        for letter in word:
+            if letter in vowels:
+                token += letter
+            elif letter == halant:
+                token += letter
+            else:
+                if len(token) > 0 and token[-1] == halant:
+                    token += letter
+                    continue
+                if token: tokens.append(token)
+                token = letter
+        tokens.append(token)
         # todo
-        return []
+        return tokens
 
 
 if __name__ == "__main__":
     # example usage
     phonemizer = Phonemizer()
-    phonemizer.word2phoneme("कर्त्तव्य शब्द का अभिप्राय उन कार्यों से होता है, जिन्हें करने के लिए व्यक्ति नैतिक रूप से प्रतिबद्ध होता है")
+    print(phonemizer.get_corresponding_phonemes("कर्त्तव्य"))
