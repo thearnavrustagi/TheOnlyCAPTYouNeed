@@ -4,7 +4,7 @@ from scipy.io.wavfile import write
 
 class TTS(object):
     def __init__(self, model_checkpoint:str="facebook/mms-tts-hin", tokenizer_checkpoint:str="facebook/mms-tts-hin"):
-        self.model_checkpoint = model_checkpoint
+        self.model_checkpoint = model_checkpoint>
         self.tokenizer_checkpoint = tokenizer_checkpoint
 
         self.model = VitsModel.from_pretrained(self.model_checkpoint)
