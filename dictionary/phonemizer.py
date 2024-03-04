@@ -56,8 +56,7 @@ class Phonemizer(object):
         """
         takes a word, and returns a list of phonemes
         """
-        vowels = {'ा','ि','ी','ु','ू','े','ै','ो','ौ'}
-        vow2 = {'ं','ँ'}
+        vowels = {'ा','ि','ी','ु','ू','े','ै','ो','ौ','ं','ँ'}
         halant = '्'
         tokens = []
         token = ''
