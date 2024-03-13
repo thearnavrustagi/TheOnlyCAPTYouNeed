@@ -1,7 +1,8 @@
-from random import choice
+from random import choice, random
 
 class PhonemeDataBase(object):
-    def __init__(self):
+    def __init__(self, *, p=0.2):
+        self.probability = p
         self.phonemes = """ऀ
 ँ
 ं
@@ -128,5 +129,8 @@ class PhonemeDataBase(object):
 ॿ""".split()
 
     def get_random_phoneme(self):
-        return choice(self.phonemes)
+        if random() < self.probability:
+            return choice(self.phonemes)
+        else:
+            return None
 
