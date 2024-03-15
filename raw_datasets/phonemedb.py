@@ -1,5 +1,6 @@
 from random import choice, random
 
+
 class PhonemeDataBase(object):
     def __init__(self, *, p=0.2):
         self.probability = p
@@ -133,4 +134,3 @@ class PhonemeDataBase(object):
             return choice(self.phonemes)
         else:
             return None
-
