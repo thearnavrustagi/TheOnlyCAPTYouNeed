@@ -4,7 +4,7 @@ from json import dump
 
 class Modifier(object):
     def __init__(self):
-        self.phonemedb = PhonemeDataBase(p=0.2)
+        self.phonemedb = PhonemeDataBase(p=0.05)
 
     def p2p_modification(self, prompt):
         head = ""

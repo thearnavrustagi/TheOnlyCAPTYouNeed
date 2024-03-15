@@ -1,10 +1,10 @@
 import librosa
 import soundfile as sf
+from random import random
 
 
 def change_energy(
-    input_audio_file, output_audio_file, *, increase_energy=None, scaling_factor=None
-):
+    y, *, increase_energy=None, scaling_factor=None):
     """
     Change the energy (amplitude) of an audio file and save the resulting audio.
 
@@ -14,20 +14,13 @@ def change_energy(
     energy_scaling_factor (float): Scaling factor for changing the energy of the audio.
     """
     if not scaling_factor:
-        scaling_factor = random() / 2
+        scaling_factor = random() / 2 + 0.5
         if increase_energy:
             scaling_factor += 1
 
-    # Load the audio file
-    y, sr = librosa.load(input_audio_file)
-
-    # Change energy by scaling the amplitude
     y_scaled = y * scaling_factor
-
-    # Save the modified audio
-    sf.write(output_audio_file, y_scaled, sr)
-
-    print("Audio with changed energy saved as:", output_audio_file)
+    
+    return y_scaled
 
 
 # Example usage
