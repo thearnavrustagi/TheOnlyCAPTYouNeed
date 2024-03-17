@@ -162,5 +162,13 @@ cython_debug/
 
 data_preprocessing/*.wav
 *.wav
-datasets/train
+raw_datasets/mucs/train/audio
+raw_datasets/mucs/test/audio
+raw_datasets/l2/audio
+raw_datasets/speech_synthesis/misp_data
+raw_datasets/speech_synthesis/data
 data_preprocessing/dump
+final_dataset/train/l1/audio
+final_dataset/train/l2/audio
+final_dataset/test/audio
+final_dataset
