@@ -3,24 +3,30 @@ from scipy.io import wavfile
 from sklearn.decomposition import FastICA
 from tqdm import tqdm
 import numpy as np
+from random import random
 
-from utils import load_mucs_transcription, clean_audio
+from utils import load_mucs_transcription, clean_audio, ukw2wav
+from utils.constants import SAMPLING_RATE
 from data_preprocessing import change_energy, change_speed
-from constants import SAMPLING_RATE
+from json import load
 
 
-def make_variations_and_save(path, sr, audio):
+def make_variations_and_save(path, sr, audio, for_test=False):
     funcs = [
-            lambda y: y,
-            lambda y: change_energy(y, increase_energy=False),
-            lambda y: change_energy(y, increase_energy=True),
-            lambda y: change_speed(y, make_faster=False),
-            lambda y: change_speed(y, make_faster=True)
-        ]
+        lambda y: y,
+        lambda y: change_energy(y, increase_energy=False),
+        lambda y: change_energy(y, increase_energy=True),
+        lambda y: change_speed(y, make_faster=False),
+        lambda y: change_speed(y, make_faster=True),
+    ]
+
+    if for_test:
+        funcs = funcs[0]
 
     for i, func in enumerate(funcs):
         modified_audio = func(audio.astype(np.float32))
         wavfile.write(f"{path}-v{i}.wav", sr, modified_audio.astype(np.int16))
+
 
 class Preprocessor(object):
     def __init__(
@@ -51,21 +57,19 @@ class Preprocessor(object):
         self.__preprocess_mucs__()
 
     def __preprocess_mucs__(self):
-        """
         print("[INFO] Preprocessing MUCS:train")
-        self.__preprocess_mucs_split__(split="train")
+        # self.__preprocess_mucs_split__(split="train")
         print("[SUCCESS] Preprocessing MUCS:train")
         print("[INFO] Preprocessing MUCS:test")
-        self.__preprocess_mucs_split__(split="test")
+        # self.__preprocess_mucs_split__(split="test")
         print("[SUCCESS] Preprocessing MUCS:test")
-        """
 
         print("[INFO] Preprocessing L2:all")
-        self.__preprocess_l2_split__(split="train")
+        self.__preprocess_l2_split__()
         print("[SUCCESS] Preprocessing L2:all")
 
         print("\n[INFO] Preprocessing SpeechSynthesis:all")
-        self.__preprocess_speech_synthesis_split__(split="train")
+        self.__preprocess_speech_synthesis_split__()
         print("[SUCCESS] Preprocessing SpeechSynthesis:all")
 
     def __preprocess_mucs_split__(self, *, split="train"):
@@ -85,26 +89,72 @@ class Preprocessor(object):
             audio_data = clean_audio(audio_data.astype(np.int16), sr).astype(np.float32)
 
             with open(f"{out_path}/transcript.txt", "a") as file:
-                error_p = str([0] * len(sentence.strip().split()))
+                error_p = str([0] * len(sentence.strip()))
                 file.write(f'"{idx}", "{error_p}", "{sentence}"\n')
             make_variations_and_save(
-                f"{out_path}/audio/{idx}", SAMPLING_RATE, audio_data
+                f"{out_path}/audio/{idx}",
+                SAMPLING_RATE,
+                audio_data,
+                for_test=split == "test",
             )
 
-    def __preprocess_l2_split__(self, test_train_split=0.1):
+    def __preprocess_l2_split__(self):
         out_path = self.l2_final_path
         audio_files = list(enumerate(glob(f"{self.l2_ds_path}/audio/*")))
 
         for i, audio_file in tqdm(audio_files):
             idx = f"l2-{i}"
-            sr, audio_data = wavfile.read(audio_file)
+            sr, audio_data = ukw2wav(audio_file)
+            if len(audio_data.shape) == 2:
+                audio_data = np.mean(audio_data, axis=-1)
             audio_data = clean_audio(audio_data.astype(np.int16), sr).astype(np.float32)
             make_variations_and_save(
                 f"{out_path}/audio/{idx}", SAMPLING_RATE, audio_data
             )
 
-    def __preprocess_speech_synthesis_split__(self):
-        pass
+    def __preprocess_speech_synthesis_split__(self, *, test_train_split=0.15):
+        out_path = self.l1_final_path
+        correct_data_path = lambda fname: f"{self.speech_synthesis_path}/data/{fname}"
+        incorrect_data_path = (
+            lambda fname: f"{self.speech_synthesis_path}/misp_data/{fname}"
+        )
+        correct_data = glob(correct_data_path("*.mp3"))
+        incorrect_data = glob(incorrect_data_path("*.mp3"))
+
+        basename = lambda fname: fname.split("/")[-1]
+
+        audio_files = list(enumerate(correct_data + incorrect_data))
+        error_p = []
+        correct_script = []
+        incorrect_script = []
+        with open(f"{self.speech_synthesis_path}/e_err.json") as fpointer:
+            error_p = load(fpointer)["e_err"]
+        with open(f"{self.speech_synthesis_path}/script.txt") as file:
+            correct_script = file.read().splitlines()
+        with open(f"{self.speech_synthesis_path}/misp_script.txt") as file:
+            incorrect_script = file.read().splitlines()
+
+        for i, file in tqdm(audio_files):
+            file_id = int(basename(file).split(".")[0])
+            sentence = correct_script[file_id]
+
+            idx = f"ss-{i}"
+            err_p = [0] * len(sentence)
+
+            if "misp_data" in file:
+                err_p = error_p[file_id]
+                idx = "m" + idx
+                sentence = incorrect_script[file_id]
+
+            for_test = random() < test_train_split
+            out_path = self.test_final_path if for_test else self.l1_final_path
+            sr, audio_data = ukw2wav(file)
+            audio_data = clean_audio(audio_data, sr)
+            with open(f"{out_path}/transcript.txt", "a") as file:
+                file.write(f'"{idx}", "{error_p}", "{sentence}"\n')
+            make_variations_and_save(
+                f"{out_path}/audio/{idx}", SAMPLING_RATE, audio_data, for_test=for_test
+            )
 
 
 if __name__ == "__main__":

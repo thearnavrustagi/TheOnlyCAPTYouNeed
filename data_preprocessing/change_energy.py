@@ -3,8 +3,7 @@ import soundfile as sf
 from random import random
 
 
-def change_energy(
-    y, *, increase_energy=None, scaling_factor=None):
+def change_energy(y, *, increase_energy=None, scaling_factor=None):
     """
     Change the energy (amplitude) of an audio file and save the resulting audio.
 
@@ -19,7 +18,7 @@ def change_energy(
             scaling_factor += 1
 
     y_scaled = y * scaling_factor
-    
+
     return y_scaled
 
 
