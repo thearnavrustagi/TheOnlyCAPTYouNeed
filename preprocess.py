@@ -58,10 +58,10 @@ class Preprocessor(object):
 
     def __preprocess_mucs__(self):
         print("[INFO] Preprocessing MUCS:train")
-        # self.__preprocess_mucs_split__(split="train")
+        self.__preprocess_mucs_split__(split="train")
         print("[SUCCESS] Preprocessing MUCS:train")
         print("[INFO] Preprocessing MUCS:test")
-        # self.__preprocess_mucs_split__(split="test")
+        self.__preprocess_mucs_split__(split="test")
         print("[SUCCESS] Preprocessing MUCS:test")
 
         print("[INFO] Preprocessing L2:all")
