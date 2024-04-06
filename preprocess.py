@@ -3,6 +3,8 @@ from scipy.io import wavfile
 from sklearn.decomposition import FastICA
 from tqdm import tqdm
 import numpy as np
+import librosa
+import subprocess
 from random import random
 
 from utils import load_mucs_transcription, clean_audio, ukw2wav
@@ -21,12 +23,13 @@ def make_variations_and_save(path, sr, audio, for_test=False):
     ]
 
     if for_test:
-        funcs = funcs[0]
+        funcs = funcs[:1]
 
     for i, func in enumerate(funcs):
-        modified_audio = func(audio.astype(np.float32))
-        wavfile.write(f"{path}-v{i}.wav", sr, modified_audio.astype(np.int16))
-
+        y = func(audio.astype(np.float32))
+        file = open(f"{path}-v{i}.npy", "wb")
+        ms = librosa.feature.melspectrogram(y=y,sr=sr)
+        np.save(file, ms)
 
 class Preprocessor(object):
     def __init__(
@@ -134,12 +137,12 @@ class Preprocessor(object):
         with open(f"{self.speech_synthesis_path}/misp_script.txt") as file:
             incorrect_script = file.read().splitlines()
 
-        for i, file in tqdm(audio_files):
+        for i, file in tqdm(audio_files[::-1]):
             file_id = int(basename(file).split(".")[0])
             sentence = correct_script[file_id]
 
             idx = f"ss-{i}"
-            err_p = [0] * len(sentence)
+            err_p = str([0]*len(sentence))
 
             if "misp_data" in file:
                 err_p = error_p[file_id]
@@ -150,14 +153,17 @@ class Preprocessor(object):
             out_path = self.test_final_path if for_test else self.l1_final_path
             sr, audio_data = ukw2wav(file)
             audio_data = clean_audio(audio_data, sr)
+            line = f'"{idx}"\t"{err_p}"\t"{sentence}"\r\n'
             with open(f"{out_path}/transcript.txt", "a") as file:
-                file.write(f'"{idx}", "{error_p}", "{sentence}"\n')
+                file.write(line)
             make_variations_and_save(
                 f"{out_path}/audio/{idx}", SAMPLING_RATE, audio_data, for_test=for_test
             )
 
 
 if __name__ == "__main__":
+    print("[INFO] Deleting all the pre-existing dataset")
+    subprocess.run(["bash", "clean_final_dataset.bash"])
     print("[INFO] Starting data preprocessing")
     preprocessor = Preprocessor()
     preprocessor.preprocess()
