@@ -28,8 +28,9 @@ def make_variations_and_save(path, sr, audio, for_test=False):
     for i, func in enumerate(funcs):
         y = func(audio.astype(np.float32))
         file = open(f"{path}-v{i}.npy", "wb")
-        ms = librosa.feature.melspectrogram(y=y,sr=sr)
+        ms = librosa.feature.melspectrogram(y=y, sr=sr)
         np.save(file, ms)
+
 
 class Preprocessor(object):
     def __init__(
@@ -142,7 +143,7 @@ class Preprocessor(object):
             sentence = correct_script[file_id]
 
             idx = f"ss-{i}"
-            err_p = str([0]*len(sentence))
+            err_p = str([0] * len(sentence))
 
             if "misp_data" in file:
                 err_p = error_p[file_id]
