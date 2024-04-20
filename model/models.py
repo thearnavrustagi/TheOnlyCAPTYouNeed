@@ -1,5 +1,6 @@
 import torch
 
+
 class MispronunciationDetectionNetwork(torch.nn.Module):
     def __init__(
         self,
@@ -23,13 +24,21 @@ class MispronunciationDetectionNetwork(torch.nn.Module):
         x = self.classification_head(x)
 
         return x
-        
+
+
 class PhonemeRecognitionNetwork(torch.nn.Module):
-    def __init__(self, *, phoneme_vocabulary, mel_spectrogram_encoder, phoneme_decoder, classification_head):
-        self.phoneme_vocabulary=phoneme_vocabulary
-        self.mel_spectrogram_encoder=mel_spectrogram_encoder
-        self.phoneme_decoder=phoneme_decoder
-        self.classification_head=classification_head
+    def __init__(
+        self,
+        *,
+        phoneme_vocabulary,
+        mel_spectrogram_encoder,
+        phoneme_decoder,
+        classification_head
+    ):
+        self.phoneme_vocabulary = phoneme_vocabulary
+        self.mel_spectrogram_encoder = mel_spectrogram_encoder
+        self.phoneme_decoder = phoneme_decoder
+        self.classification_head = classification_head
 
     def forward(self, i):
         x = self.mel_spectrogram_encoder(i)
