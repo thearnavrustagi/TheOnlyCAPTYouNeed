@@ -1,4 +1,5 @@
 from glob import glob
+import os
 from scipy.io import wavfile
 from sklearn.decomposition import FastICA
 from tqdm import tqdm
@@ -57,12 +58,14 @@ class Preprocessor(object):
         for path in self.final_paths:
             with open(f"{path}/transcript.txt", "w+") as file:
                 file.write("file_identifier, error_p, sentence\n")
+                if path + "/audio" not in glob(f"{path}/*"):
+                    os.mkdir(path+"/audio")
 
-        self.__preprocess_mucs__()
+        self.__preprocess_data__()
 
-    def __preprocess_mucs__(self):
+    def __preprocess_data__(self):
         print("[INFO] Preprocessing MUCS:train")
-        self.__preprocess_mucs_split__(split="train")
+        #self.__preprocess_mucs_split__(split="train")
         print("[SUCCESS] Preprocessing MUCS:train")
         print("[INFO] Preprocessing MUCS:test")
         self.__preprocess_mucs_split__(split="test")
@@ -82,6 +85,7 @@ class Preprocessor(object):
         )
         audio_files = list(enumerate(glob(f"{self.mucs_path}/{split}/audio/*")))
         out_path = self.test_final_path if split == "test" else self.l1_final_path
+
 
         for i, audio_file in tqdm(audio_files):
             idx = f"mucs-{i}"

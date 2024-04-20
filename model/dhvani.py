@@ -1,6 +1,7 @@
 import torch
-from utils import train_one_epoch
-
+from utils import train_one_epoch, validate_model
+from models import MispronunciationDetectionNetwork, PhonemeRecognitionNetwork
+from hyperparameters import N_EPOCHS
 
 class Dhvani(torch.nn.Module):
     def __init__(
@@ -29,36 +30,25 @@ class Dhvani(torch.nn.Module):
             classification_head=mdn_classification_head
         )
 
-    def train(self, *, dataloader):
+    """
+    dataloaders = (train_dataloader, validation_dataloader, test_dataloader)
+    """
+    def train(self, dataloaders, *, epochs=N_EPOCHS):
         prn_optimizer = torch.optim.Adam(self.phoneme_recognition_network.parameters())
-        mdn_optimizer = torch.optim.Adam(self.mispronunciation_detection_network.parameters())A
+        mdn_optimizer = torch.optim.Adam(self.mispronunciation_detection_network.parameters())
 
-        loss_fn = torch.nn.CrossEntropyLoss()
+        train_dataloader, validation_dataloader, test_dataloader = dataloaders
 
-        train_one_epoch(self.phoneme_recognition_network, dataloader, prn_optimizer, loss_fn, xidx=0, yidx=0)
-        train_one_epoch(self.mispronunciation_detection_network, dataloader, mdn_optimizer, loss_fn, xidx=2, yidx=1)
+        prn_loss_fn = torch.nn.CrossEntropyLoss()
+        mdn_loss_fn = torch.nn.BCELoss()
 
-
-class MispronunciationDetectionNetwork(torch.nn.Module):
-    def __init__(
-        self,
-        *,
-        phoneme_vocabulary: int,
-        phoneme_encoder: torch.nn.Module,
-        phoneme_decoder: torch.nn.Module,
-        word_decoder: torch.nn.Module,
-        classification_head: torch.nn.Module
-    ):
-        self.phoneme_vocabulary = phoneme_vocabulary
-        self.phoneme_encoder = phoneme_encoder
-        self.phoneme_decoder = phoneme_decoder
-        self.word_decoder = word_decoder
-        self.classification_head = classification_head
-
-    def forward(self, i):
-        x = self.phoneme_encoder(i)
-        x = self.phoneme_decoder(x)
-        x = self.word_decoder(x)
-        
-
-
+        for epoch_number in range(epochs):
+            print(f"Training EPOCH:{epoch_number}")
+            train_one_epoch(self.phoneme_recognition_network, train_dataloader, prn_optimizer, prn_loss_fn, xidx=0, yidx=2)
+            train_one_epoch(self.mispronunciation_detection_network, train_dataloader, mdn_optimizer, mdn_loss_fn, xidx=2, yidx=1)
+            print(f"Running Validation")
+            validate_model(self.phoneme_recognition_network, validation_dataloader, prn_loss_fn, xidx=0, yidx=2)
+            validate_model(self.mispronunciation_detection_network, validation_dataloader, mdn_loss_fn, xidx=2, yidx=1)
+    
+if __name__ == "__main__":
+    pass
