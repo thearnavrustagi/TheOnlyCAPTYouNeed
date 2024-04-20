@@ -6,10 +6,14 @@ from torcheval.metrics.functional import multiclass_f1_score
 xidx: the index of the x (inputs) to the models
 yidx: 
 """
-def train_one_epoch(model, dataloader, optimizer, loss_fn, *, xidx=-0, yidx=1, classes=None):
+
+
+def train_one_epoch(
+    model, dataloader, optimizer, loss_fn, *, xidx=-0, yidx=1, classes=None
+):
     progress_bar = tqdm(enumerate(dataloader))
     running_loss = []
-    for  i, data in progress_bar:
+    for i, data in progress_bar:
         X, y = data[xidx], data[yidx]
 
         optimizer.zero_grad()
