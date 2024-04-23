@@ -1,7 +1,7 @@
 import torch
-from utils import train_one_epoch, validate_model
-from models import MispronunciationDetectionNetwork, PhonemeRecognitionNetwork
-from hyperparameters import N_EPOCHS
+from .utils import train_one_epoch, validate_model
+from .models import MispronunciationDetectionNetwork, PhonemeRecognitionNetwork
+from .hyperparameters import N_EPOCHS
 
 
 class Dhvani(torch.nn.Module):

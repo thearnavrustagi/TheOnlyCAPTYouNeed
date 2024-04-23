@@ -1,5 +1,9 @@
-from dataloaders import L1SpeechDataset
+from dataloaders import train_dataloader
+from model import MelSpectrogramEncoder
 
 if __name__ == "__main__":
-    l1 = L1SpeechDataset()
-    print(l1[4][0].shape)
+    ms, e_p, tokens =  next(iter(train_dataloader))
+    print(ms.shape)
+    layer = MelSpectrogramEncoder()
+    y = layer(ms)
+    print(y.shape)
