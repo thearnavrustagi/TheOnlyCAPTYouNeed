@@ -12,7 +12,7 @@ from .hyperparameters import (
     MS_ENCODER_GRU_HIDDEN_SIZE,
     MS_MAX_LEN,
     MS_NUM_FEATURES,
-    MS_GRU_INPUT_SIZE
+    MS_GRU_INPUT_SIZE,
 )
 
 
@@ -30,7 +30,6 @@ class MelSpectrogramEncoder(torch.nn.Module):
         dropout=DROPOUT_CNN,
         batch_norm=BATCH_NORM,
         hidden_size=MS_ENCODER_GRU_HIDDEN_SIZE,
-
         ms_max_len=MS_MAX_LEN,
         ms_num_features=MS_NUM_FEATURES,
         ms_gru_input_size=MS_GRU_INPUT_SIZE,
@@ -54,7 +53,7 @@ class MelSpectrogramEncoder(torch.nn.Module):
             padding=padding,
             stride=stride,
         )
-        
+
         self.conv2 = nn.Conv1d(
             in_channels=in_channels,
             out_channels=out_channels,
@@ -62,7 +61,7 @@ class MelSpectrogramEncoder(torch.nn.Module):
             padding=padding,
             stride=stride,
         )
-        
+
         self.conv3 = nn.Conv1d(
             in_channels=in_channels,
             out_channels=out_channels,
@@ -70,12 +69,17 @@ class MelSpectrogramEncoder(torch.nn.Module):
             padding=padding,
             stride=stride,
         )
-        
+
         self.dropout = torch.nn.Dropout(p=dropout)
         self.batch_norm = torch.nn.LayerNorm((out_channels, ms_max_len))
-        
+
         self.convs = [self.conv1, self.conv2, self.conv3]
         self.gru = nn.GRU(ms_max_len, hidden_size=hidden_size)
+
+    """
+    IN SHAPE: (N, 128, 256)
+    OUT SHAPE: (N, 16, 128)
+    """
 
     def forward(self, x):
         for conv_layer in self.convs:

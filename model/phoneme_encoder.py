@@ -12,9 +12,7 @@ from .hyperparameters import (
     P_ENCODER_GRU_HIDDEN_SIZE,
     P_MAX_LEN,
     P_NUM_FEATURES,
-    P_GRU_INPUT_SIZE,
     EMBEDDING_DIM,
-    NUM_EMBEDDINGS
 )
 
 
@@ -34,9 +32,7 @@ class PhonemeEncoder(torch.nn.Module):
         hidden_size=P_ENCODER_GRU_HIDDEN_SIZE,
         p_max_len=P_MAX_LEN,
         p_num_features=P_NUM_FEATURES,
-        p_gru_input_size=P_GRU_INPUT_SIZE,
-        embedding_dim=EMBEDDING_DIM
-        num_embeddings=NUM_EMBEDDINGS
+        embedding_dim=EMBEDDING_DIM,
     ):
         super().__init__()
         self.in_channels = in_channels
@@ -81,22 +77,19 @@ class PhonemeEncoder(torch.nn.Module):
         self.gru = nn.GRU(p_max_len, hidden_size=hidden_size)
 
         self.embedding_table = torch.nn.Embedding(
-            num_embeddings = NUM_EMBEDDINGS,
-            embedding_dim = embedding_dim,
-            padding_idx=None,
-            max_norm=None,
-            norm_type=2.0,
-            scale_grad_by_freq=False,
-            sparse=False,
-            _weight=None,
-            _freeze=False,
-            device=None,
-            dtype=None,
+            num_embeddings=p_max_len,
+            embedding_dim=embedding_dim,
         )
+
+    """
+    IN SHAPE: (N, 144)
+    OUT SHAPE: (N, 16, 128)
+    """
 
     def forward(self, x):
         # Perform embedding lookup
         x = self.embedding_table(x)
+        x = x.permute(0, 2, 1)
 
         # Apply convolutional layers
         for conv_layer in self.convs:
