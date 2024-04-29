@@ -74,7 +74,7 @@ class MelSpectrogramEncoder(torch.nn.Module):
         self.batch_norm = torch.nn.LayerNorm((out_channels, ms_max_len))
 
         self.convs = [self.conv1, self.conv2, self.conv3]
-        self.gru = nn.GRU(ms_max_len, hidden_size=hidden_size)
+        self.gru = nn.GRU(out_channels, hidden_size=hidden_size)
 
     """
     IN SHAPE: (N, 128, 256)
@@ -87,6 +87,7 @@ class MelSpectrogramEncoder(torch.nn.Module):
             x = self.dropout(x)
             x = self.batch_norm(x)
             x = self.activation(x)
+        x = torch.permute(x,(0,2,1))
         (x, _) = self.gru(x)
         x = self.dropout(x)
         return x

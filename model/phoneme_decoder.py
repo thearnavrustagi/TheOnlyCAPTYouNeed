@@ -40,6 +40,6 @@ class PhonemeDecoder(nn.Module):
         attn_output, _ = self.self_attn(x, x, x)
         x = x + attn_output
         x, _ = self.gru(x)
-        y = self.dropout(x)
+        x = self.dropout(x)
 
-        return y
+        return x

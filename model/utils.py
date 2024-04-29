@@ -6,6 +6,9 @@ from torcheval.metrics.functional import (
     multiclass_recall,
     multiclass_precision,
 )
+from .hyperparameters import (
+    PRN_CLF_OUT_DIM,
+)
 from torch.nn import Softmax
 import csv
 import os
@@ -19,13 +22,17 @@ class MetricEvaluater(object):
     @staticmethod
     def evaluate(metrics, *, y_pred, y, n_classes):
         for key in metrics.keys():
+            val = None
             match key:
                 case "auc":
-                    val = MetricEvaluater.compute_auc(y_pred, y, n_classes)
+                    pass
+                    #val = MetricEvaluater.compute_auc(y_pred, y, n_classes)
                 case "precision":
-                    val = MetricEvaluater.compute_precision(y_pred, y, n_classes)
+                    pass
+                    #val = MetricEvaluater.compute_precision(y_pred, y, n_classes)
                 case "recall":
-                    val = MetricEvaluater.compute_recall(y_pred, y, n_classes)
+                    pass
+                    #val = MetricEvaluater.compute_recall(y_pred, y, n_classes)
                 case "f1_score":
                     val = MetricEvaluater.compute_f1_score(y_pred, y, n_classes)
 
@@ -38,7 +45,7 @@ class MetricEvaluater(object):
     # takes logits as input
     @staticmethod
     def compute_precision(y_pred, y, n_classes):
-        y_pred = Softmax(y_pred)
+        y_pred = Softmax()(y_pred)
         labels_prediction = torch.argmax(y_pred, axis=-1)
         labels_real = torch.argmax(y, axis=-1)
         return multiclass_precision(
@@ -58,24 +65,34 @@ class MetricEvaluater(object):
     # takes logits as input
     @staticmethod
     def compute_f1_score(y_pred, y, n_classes):
-        y_pred = Softmax(y_pred)
         labels_prediction = torch.argmax(y_pred, axis=-1)
         labels_real = torch.argmax(y, axis=-1)
-        return multiclass_f1_score(
-            labels_prediction, labels_real, num_classes=n_classes
-        ).item()
+        f1_scores = 0
+        for i in range(len(y_pred)):
+           f1_scores +=  multiclass_f1_score(
+                labels_prediction[i], labels_real[i], num_classes=n_classes
+            ).item()
+        return f1_scores / len(y_pred)
 
+
+def one_hot_encode(index):
+    unique_classes = PRN_CLF_OUT_DIM
+    output_size = (index.shape[0], index.shape[1], unique_classes)
+
+    one_hot_tensor = torch.zeros(output_size)
+    index = index.unsqueeze(dim=2)
+    one_hot_tensor.scatter_(1, index, 1)
+
+    return one_hot_tensor
 
 """
 xidx: the index of the x (inputs) to the models
 yidx: the index of the expected outputs to the models
 """
-
-
 def train_one_epoch(
     model, dataloader, optimizer, loss_fn, *, xidx=0, yidx=1, classes=None
 ):
-    progress_bar = tqdm(enumerate(dataloader))
+    progress_bar = tqdm(list(enumerate(dataloader)))
     running_loss = []
 
     if classes:
@@ -86,6 +103,7 @@ def train_one_epoch(
 
         optimizer.zero_grad()
         y_pred = model(X)
+        y = one_hot_encode(y)
 
         loss = loss_fn(y_pred, y)
         loss.backward()
@@ -95,11 +113,12 @@ def train_one_epoch(
         status_text = f"running_loss: {mean(running_loss)}; "
 
         if classes:
-            MetricEvaluater.evaluate(metrics)
+            MetricEvaluater.evaluate(metrics, y_pred=y_pred, y=y, n_classes=classes)
+            status_text += f"f1_score: {mean(metrics['f1_score'])}"
 
         progress_bar.set_description(status_text)
 
-    metrics.append(mean(running_loss))
+    metrics["loss"] = mean(running_loss)
 
     if classes:
         pass

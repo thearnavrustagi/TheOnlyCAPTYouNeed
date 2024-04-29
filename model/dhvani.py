@@ -1,25 +1,27 @@
 import torch
 from .utils import train_one_epoch, validate_model
 from .models import MispronunciationDetectionNetwork, PhonemeRecognitionNetwork
-from .hyperparameters import N_EPOCHS
-
+from .models import MDNClassificationHead, PRNClassificationHead
+from .hyperparameters import N_EPOCHS, PRN_CLF_OUT_DIM, LR
+from .melspectogram_encoder import MelSpectrogramEncoder
+from .phoneme_encoder import PhonemeEncoder
+from .phoneme_decoder import PhonemeDecoder
+from .word_decoder import WordDecoder
 
 class Dhvani(torch.nn.Module):
     def __init__(
         self,
         *,
-        phoneme_encoder: torch.nn.Module,
-        mel_spectrogram_encoder: torch.nn.Module,
-        phoneme_decoder: torch.nn.Module,
-        word_decoder: torch.nn.Module,
-        phoneme_vocabulary: int,
-        mdn_classification_head: torch.nn.Module,
-        prn_classification_head: torch.nn.Module,
+        phoneme_encoder: torch.nn.Module = PhonemeEncoder(),
+        mel_spectrogram_encoder: torch.nn.Module = MelSpectrogramEncoder(),
+        phoneme_decoder: torch.nn.Module = PhonemeDecoder(),
+        word_decoder: torch.nn.Module = WordDecoder(),
+        mdn_classification_head: torch.nn.Module = MDNClassificationHead(),
+        prn_classification_head: torch.nn.Module = PRNClassificationHead(),
     ):
         super(Dhvani, self).__init__()
 
         self.phoneme_recognition_network = PhonemeRecognitionNetwork(
-            phoneme_vocabulary=phoneme_vocabulary,
             mel_spectrogram_encoder=mel_spectrogram_encoder,
             phoneme_decoder=phoneme_decoder,
             classification_head=prn_classification_head,
@@ -31,14 +33,16 @@ class Dhvani(torch.nn.Module):
             classification_head=mdn_classification_head,
         )
 
-    """
-    dataloaders = (train_dataloader, validation_dataloader, test_dataloader)
-    """
+    def forward(self, ms, tokens):
+        prn_out = self.phoneme_recognition_network(ms)
+        mdn_out = self.mispronunciation_detection_network(tokens)
+
+        return prn_out, mdn_out
 
     def train(self, dataloaders, *, epochs=N_EPOCHS):
-        prn_optimizer = torch.optim.Adam(self.phoneme_recognition_network.parameters())
+        prn_optimizer = torch.optim.Adam(self.phoneme_recognition_network.parameters(), lr=LR)
         mdn_optimizer = torch.optim.Adam(
-            self.mispronunciation_detection_network.parameters()
+            self.mispronunciation_detection_network.parameters(), lr=LR
         )
 
         train_dataloader, validation_dataloader, test_dataloader = dataloaders
@@ -55,7 +59,9 @@ class Dhvani(torch.nn.Module):
                 prn_loss_fn,
                 xidx=0,
                 yidx=2,
+                classes=PRN_CLF_OUT_DIM
             )
+            """
             train_one_epoch(
                 self.mispronunciation_detection_network,
                 train_dataloader,
@@ -79,6 +85,7 @@ class Dhvani(torch.nn.Module):
                 xidx=2,
                 yidx=1,
             )
+            """
 
 
 if __name__ == "__main__":

@@ -57,7 +57,7 @@ class Preprocessor(object):
     def preprocess(self):
         for path in self.final_paths:
             with open(f"{path}/transcript.txt", "w+") as file:
-                file.write("file_identifier, error_p, sentence\n")
+                file.write("file_identifier\terror_p\tsentence\n")
                 if path + "/audio" not in glob(f"{path}/*"):
                     os.mkdir(path + "/audio")
 
@@ -68,11 +68,11 @@ class Preprocessor(object):
         # self.__preprocess_mucs_split__(split="train")
         print("[SUCCESS] Preprocessing MUCS:train")
         print("[INFO] Preprocessing MUCS:test")
-        self.__preprocess_mucs_split__(split="test")
+        # self.__preprocess_mucs_split__(split="test")
         print("[SUCCESS] Preprocessing MUCS:test")
 
         print("[INFO] Preprocessing L2:all")
-        self.__preprocess_l2_split__()
+        # self.__preprocess_l2_split__()
         print("[SUCCESS] Preprocessing L2:all")
 
         print("\n[INFO] Preprocessing SpeechSynthesis:all")
@@ -96,7 +96,7 @@ class Preprocessor(object):
             audio_data = clean_audio(audio_data.astype(np.int16), sr).astype(np.float32)
 
             with open(f"{out_path}/transcript.txt", "a") as file:
-                error_p = str([0] * len(sentence.strip()))
+                error_p = str([0] * len(sentence.strip().split(" ")))
                 file.write(f'"{idx}", "{error_p}", "{sentence}"\n')
             make_variations_and_save(
                 f"{out_path}/audio/{idx}",
@@ -146,7 +146,7 @@ class Preprocessor(object):
             sentence = correct_script[file_id]
 
             idx = f"ss-{i}"
-            err_p = str([0] * len(sentence))
+            err_p = str([0] * len(sentence.strip().split(" ")))
 
             if "misp_data" in file:
                 err_p = error_p[file_id]
