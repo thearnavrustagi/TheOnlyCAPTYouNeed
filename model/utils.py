@@ -9,6 +9,7 @@ from torcheval.metrics.functional import (
 from .hyperparameters import (
     PRN_CLF_OUT_DIM,
 )
+from torch.nn.functional import one_hot
 from torch.nn import Softmax
 import csv
 import os
@@ -81,7 +82,7 @@ def one_hot_encode(index):
 
     one_hot_tensor = torch.zeros(output_size)
     index = index.unsqueeze(dim=2)
-    one_hot_tensor.scatter_(1, index, 1)
+    one_hot_tensor.scatter_(-1, index, 1)
 
     return one_hot_tensor
 
@@ -90,31 +91,31 @@ xidx: the index of the x (inputs) to the models
 yidx: the index of the expected outputs to the models
 """
 def train_one_epoch(
-    model, dataloader, optimizer, loss_fn, *, xidx=0, yidx=1, classes=None
+    model, dataloader, optimizer, loss_fn, *, xidx=0, yidx=1, classes=None, dirname="./logs", epoch_number=-1
 ):
-    progress_bar = tqdm(list(enumerate(dataloader)))
+    progress_bar = tqdm(dataloader)
     running_loss = []
 
     if classes:
         metrics = MetricEvaluater.create_metric_store()
 
-    for i, data in progress_bar:
-        X, y = data[xidx], data[yidx]
+    for data in progress_bar:
+        X, y_old = data[xidx], data[yidx]
 
         optimizer.zero_grad()
         y_pred = model(X)
-        y = one_hot_encode(y)
+        y = one_hot_encode(y_old)
 
         loss = loss_fn(y_pred, y)
         loss.backward()
         optimizer.step()
 
         running_loss.append(loss.item())
-        status_text = f"running_loss: {mean(running_loss)}; "
+        status_text = f"running_loss: {mean(running_loss):.4f}; "
 
         if classes:
             MetricEvaluater.evaluate(metrics, y_pred=y_pred, y=y, n_classes=classes)
-            status_text += f"f1_score: {mean(metrics['f1_score'])}"
+            status_text += f"f1_score: {mean(metrics['f1_score']):.4f}"
 
         progress_bar.set_description(status_text)
 
@@ -122,6 +123,11 @@ def train_one_epoch(
 
     if classes:
         pass
+
+    with open(f"{dirname}/train_{epoch_number}.csv", "w+") as file:
+        writer = csv.writer(file)
+        writer.writerow(list(metrics.keys()))
+        writer.writerow(list(metrics.values()))
 
     return tuple(metrics)
 
@@ -136,33 +142,37 @@ def validate_model(
     epoch_number=-1,
     classes=None,
     plot=False,
+    dirname="./logs/"
 ):
-    progress_bar = tqdm(enumerate(dataloader))
+    progress_bar = tqdm(dataloader)
     running_loss = []
-    metrics = [{"f1_score": []}]
 
-    for i, data in progress_bar:
-        X, y = data[xidx], data[yidx]
+    if classes:
+        metrics = MetricEvaluater.create_metric_store()
+
+    for data in progress_bar:
+        X, y_old = data[xidx], data[yidx]
+
         y_pred = model(X)
+        y = one_hot_encode(y_old)
 
         loss = loss_fn(y_pred, y)
+
         running_loss.append(loss.item())
+        status_text = f"running_loss: {mean(running_loss):.4f}; "
 
-        status_text = f"running_loss: {mean(running_loss)}; "
-
-        if classes != None:
-            f1_score = multiclass_f1_score(y_pred, y, num_classes=classes)
-            metrics["f1_score"].append(f1_score)
-            status_text += f"f1-score: {f1_score}; "
+        if classes:
+            MetricEvaluater.evaluate(metrics, y_pred=y_pred, y=y, n_classes=classes)
+            status_text += f"f1_score: {mean(metrics['f1_score']):.4f}"
 
         progress_bar.set_description(status_text)
 
-    metrics["loss"] = running_loss
+    metrics["loss"] = mean(running_loss)
 
-    dirname = "./logs/epoch_{epoch_number}"
-    os.mkdir(dirname)
+    if classes:
+        pass
 
     with open(f"{dirname}/validation_{epoch_number}.csv", "w+") as file:
-        writer = csv.DictWriter(file, fieldnames=metrics.keys())
-        writer.writeheader()
-        writer.writerows(metrics)
+        writer = csv.writer(file)
+        writer.writerow(list(metrics.keys()))
+        writer.writerow(list(metrics.values()))

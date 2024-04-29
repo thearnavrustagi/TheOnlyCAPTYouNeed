@@ -59,7 +59,8 @@ class Dhvani(torch.nn.Module):
                 prn_loss_fn,
                 xidx=0,
                 yidx=2,
-                classes=PRN_CLF_OUT_DIM
+                classes=PRN_CLF_OUT_DIM,
+                epoch_number=epoch_number
             )
             """
             train_one_epoch(
@@ -70,6 +71,7 @@ class Dhvani(torch.nn.Module):
                 xidx=2,
                 yidx=1,
             )
+            """
             print(f"Running Validation")
             validate_model(
                 self.phoneme_recognition_network,
@@ -77,7 +79,10 @@ class Dhvani(torch.nn.Module):
                 prn_loss_fn,
                 xidx=0,
                 yidx=2,
+                epoch_number=epoch_number,
+                classes=PRN_CLF_OUT_DIM
             )
+            """
             validate_model(
                 self.mispronunciation_detection_network,
                 validation_dataloader,

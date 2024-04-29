@@ -12,7 +12,7 @@ class L1SpeechDataset(Dataset):
         self,
         *,
         data_path="./final_dataset/$split$/l1",
-        annotation_file_name="transcript.txt",
+        annotation_file_name="temp.txt",
         audio_directory_name="audio",
         split="train",
     ):
@@ -27,6 +27,7 @@ class L1SpeechDataset(Dataset):
         self.transcript_df = pd.read_csv(
             self.annotation_file, encoding="utf-8", sep="\t"
         )
+        self.transcript_df = self.transcript_df.map(lambda x: x.strip() if isinstance(x, str) else x)
         self.audio_files = glob(f"{self.audio_files_path}/*")
 
     def __getitem__(self, idx):

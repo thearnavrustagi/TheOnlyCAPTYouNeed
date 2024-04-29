@@ -65,14 +65,14 @@ class Preprocessor(object):
 
     def __preprocess_data__(self):
         print("[INFO] Preprocessing MUCS:train")
-        # self.__preprocess_mucs_split__(split="train")
+        self.__preprocess_mucs_split__(split="train")
         print("[SUCCESS] Preprocessing MUCS:train")
         print("[INFO] Preprocessing MUCS:test")
-        # self.__preprocess_mucs_split__(split="test")
+        self.__preprocess_mucs_split__(split="test")
         print("[SUCCESS] Preprocessing MUCS:test")
 
         print("[INFO] Preprocessing L2:all")
-        # self.__preprocess_l2_split__()
+        self.__preprocess_l2_split__()
         print("[SUCCESS] Preprocessing L2:all")
 
         print("\n[INFO] Preprocessing SpeechSynthesis:all")
@@ -97,7 +97,7 @@ class Preprocessor(object):
 
             with open(f"{out_path}/transcript.txt", "a") as file:
                 error_p = str([0] * len(sentence.strip().split(" ")))
-                file.write(f'"{idx}", "{error_p}", "{sentence}"\n')
+                file.write(f'"{idx}"\t"{error_p}"\t"{sentence}"\n')
             make_variations_and_save(
                 f"{out_path}/audio/{idx}",
                 SAMPLING_RATE,
