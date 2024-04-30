@@ -99,11 +99,13 @@ def train_one_epoch(
     if classes:
         metrics = MetricEvaluater.create_metric_store()
 
+    device = "mps"
+    model.to(device)
     for data in progress_bar:
         X, y_old = data[xidx], data[yidx]
 
         optimizer.zero_grad()
-        y_pred = model(X)
+        y_pred = model(X.to(device)).to("cpu")
         y = one_hot_encode(y_old)
 
         loss = loss_fn(y_pred, y)
@@ -146,14 +148,16 @@ def validate_model(
 ):
     progress_bar = tqdm(dataloader)
     running_loss = []
+    device = "mps"
 
     if classes:
         metrics = MetricEvaluater.create_metric_store()
 
+    model.to(device)
     for data in progress_bar:
         X, y_old = data[xidx], data[yidx]
 
-        y_pred = model(X)
+        y_pred = model(X.to(device)).to("cpu")
         y = one_hot_encode(y_old)
 
         loss = loss_fn(y_pred, y)

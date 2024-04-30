@@ -1,7 +1,7 @@
 import torch
 
-N_EPOCHS = 16
-LR = 1e-4
+N_EPOCHS = 15
+LR = 1e-5
 
 IN_CHANNELS = 16
 OUT_CHANNELS = IN_CHANNELS
