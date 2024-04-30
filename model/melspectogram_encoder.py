@@ -69,11 +69,35 @@ class MelSpectrogramEncoder(torch.nn.Module):
             padding=padding,
             stride=stride,
         )
+        
+        self.conv4 = nn.Conv1d(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=kernel_size,
+            padding=padding,
+            stride=stride,
+        )
+
+        self.conv5 = nn.Conv1d(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=kernel_size,
+            padding=padding,
+            stride=stride,
+        )
+        
+        self.conv6 = nn.Conv1d(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=kernel_size,
+            padding=padding,
+            stride=stride,
+        )
 
         self.dropout = torch.nn.Dropout(p=dropout)
         self.batch_norm = torch.nn.LayerNorm((out_channels, ms_max_len))
 
-        self.convs = [self.conv1, self.conv2, self.conv3]
+        self.convs = [self.conv1, self.conv2, self.conv3, self.conv4, self.conv5, self.conv6]
         self.gru = nn.GRU(out_channels, hidden_size=hidden_size)
 
     """
@@ -83,11 +107,12 @@ class MelSpectrogramEncoder(torch.nn.Module):
 
     def forward(self, x):
         for conv_layer in self.convs:
+            x = self.batch_norm(x)
             x = conv_layer(x)
             x = self.dropout(x)
-            x = self.batch_norm(x)
             x = self.activation(x)
         x = torch.permute(x,(0,2,1))
         (x, _) = self.gru(x)
+        x = self.activation(x)
         x = self.dropout(x)
         return x
