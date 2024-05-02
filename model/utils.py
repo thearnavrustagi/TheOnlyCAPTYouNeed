@@ -91,7 +91,7 @@ xidx: the index of the x (inputs) to the models
 yidx: the index of the expected outputs to the models
 """
 def train_one_epoch(
-    model, dataloader, optimizer, loss_fn, *, xidx=0, yidx=1, classes=None, dirname="./logs", epoch_number=-1, train=True
+    model, dataloader, loss_fn, *, xidx=0, yidx=1, classes=None, dirname="./logs", epoch_number=-1, train=True, optimizer=None
 ):
     progress_bar = tqdm(dataloader)
     running_loss = []
@@ -104,7 +104,6 @@ def train_one_epoch(
     for data in progress_bar:
         X, y_old = data[xidx], data[yidx]
 
-        optimizer.zero_grad()
         y_pred = model(X.to(device)).to("cpu")
         y = one_hot_encode(y_old)
 
@@ -112,6 +111,7 @@ def train_one_epoch(
         if train:
             loss.backward()
             optimizer.step()
+            optimizer.zero_grad()
 
         running_loss.append(loss.item())
         status_text = f"running_loss: {mean(running_loss):.4f}; "
@@ -122,8 +122,9 @@ def train_one_epoch(
             status_text += f"recall: {mean(metrics['recall']):.4f}; "
             status_text += f"precision: {mean(metrics['precision']):.4f} "
         progress_bar.set_description(status_text)
+        break
 
-    metrics["loss"] = mean(running_loss)
+    metrics["loss"] = running_loss
 
     if classes:
         pass

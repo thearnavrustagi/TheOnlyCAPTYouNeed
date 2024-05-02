@@ -1,5 +1,6 @@
 import torch
 
+SEED=0
 N_EPOCHS = 15
 LR = 1e-5
 
