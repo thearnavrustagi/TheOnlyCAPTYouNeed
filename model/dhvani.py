@@ -1,5 +1,5 @@
 import torch
-from .utils import train_one_epoch, validate_model
+from .utils import train_one_epoch
 from .models import MispronunciationDetectionNetwork, PhonemeRecognitionNetwork
 from .models import MDNClassificationHead, PRNClassificationHead
 from .hyperparameters import N_EPOCHS, PRN_CLF_OUT_DIM, LR
@@ -73,14 +73,15 @@ class Dhvani(torch.nn.Module):
             )
             """
             print(f"Running Validation")
-            validate_model(
+            train_model(
                 self.phoneme_recognition_network,
                 validation_dataloader,
                 prn_loss_fn,
                 xidx=0,
                 yidx=2,
                 epoch_number=epoch_number,
-                classes=PRN_CLF_OUT_DIM
+                classes=PRN_CLF_OUT_DIM,
+                train=False
             )
             """
             validate_model(
