@@ -26,18 +26,14 @@ class MetricEvaluater(object):
             val = None
             match key:
                 case "auc":
-                    pass
-                    #val = MetricEvaluater.compute_auc(y_pred, y, n_classes)
+                    val = MetricEvaluater.compute_auc(y_pred, y, n_classes)
                 case "precision":
-                    pass
-                    #val = MetricEvaluater.compute_precision(y_pred, y, n_classes)
+                    val = MetricEvaluater.compute_precision(y_pred, y, n_classes)
                 case "recall":
-                    pass
-                    #val = MetricEvaluater.compute_recall(y_pred, y, n_classes)
+                    val = MetricEvaluater.compute_recall(y_pred, y, n_classes)
                 case "f1_score":
                     val = MetricEvaluater.compute_f1_score(y_pred, y, n_classes)
-
-            metrics[key] = val
+            metrics[key].append(val)
 
     @staticmethod
     def compute_auc(y_pred, y, n_classes):
@@ -46,22 +42,26 @@ class MetricEvaluater(object):
     # takes logits as input
     @staticmethod
     def compute_precision(y_pred, y, n_classes):
-        y_pred = Softmax()(y_pred)
         labels_prediction = torch.argmax(y_pred, axis=-1)
         labels_real = torch.argmax(y, axis=-1)
-        return multiclass_precision(
-            labels_prediction, labels_real, num_classes=n_classes
-        ).item()
+        precisions = 0
+        for i in range(len(y_pred)):
+            precisions += multiclass_precision(
+                labels_prediction[i], labels_real[i], num_classes=n_classes
+            ).item()
+        return precisions / len(y_pred)
 
     # takes logits as input
     @staticmethod
     def compute_recall(y_pred, y, n_classes):
-        y_pred = Softmax(y_pred)
         labels_prediction = torch.argmax(y_pred, axis=-1)
         labels_real = torch.argmax(y, axis=-1)
-        return multiclass_recall(
-            labels_prediction, labels_real, num_classes=n_classes
-        ).item()
+        recalls = 0
+        for i in range(len(y_pred)):
+            recalls += multiclass_recall(
+                labels_prediction[i], labels_real[i], num_classes=n_classes
+            ).item()
+        return recalls / len(y_pred)
 
     # takes logits as input
     @staticmethod
@@ -91,7 +91,7 @@ xidx: the index of the x (inputs) to the models
 yidx: the index of the expected outputs to the models
 """
 def train_one_epoch(
-    model, dataloader, optimizer, loss_fn, *, xidx=0, yidx=1, classes=None, dirname="./logs", epoch_number=-1
+    model, dataloader, optimizer, loss_fn, *, xidx=0, yidx=1, classes=None, dirname="./logs", epoch_number=-1, train=True
 ):
     progress_bar = tqdm(dataloader)
     running_loss = []
@@ -99,7 +99,7 @@ def train_one_epoch(
     if classes:
         metrics = MetricEvaluater.create_metric_store()
 
-    device = "mps"
+    device = "mps" if torch.backends.mps.is_available() else "cpu"
     model.to(device)
     for data in progress_bar:
         X, y_old = data[xidx], data[yidx]
@@ -109,16 +109,18 @@ def train_one_epoch(
         y = one_hot_encode(y_old)
 
         loss = loss_fn(y_pred, y)
-        loss.backward()
-        optimizer.step()
+        if train:
+            loss.backward()
+            optimizer.step()
 
         running_loss.append(loss.item())
         status_text = f"running_loss: {mean(running_loss):.4f}; "
 
         if classes:
             MetricEvaluater.evaluate(metrics, y_pred=y_pred, y=y, n_classes=classes)
-            status_text += f"f1_score: {mean(metrics['f1_score']):.4f}"
-
+            status_text += f"f1_score: {mean(metrics['f1_score']):.4f}; "
+            status_text += f"recall: {mean(metrics['recall']):.4f}; "
+            status_text += f"precision: {mean(metrics['precision']):.4f} "
         progress_bar.set_description(status_text)
 
     metrics["loss"] = mean(running_loss)
@@ -126,57 +128,9 @@ def train_one_epoch(
     if classes:
         pass
 
-    with open(f"{dirname}/train_{epoch_number}.csv", "w+") as file:
+    with open(f"{dirname}/{'train' if train else 'validation'}_{epoch_number}.csv", "w+") as file:
         writer = csv.writer(file)
         writer.writerow(list(metrics.keys()))
-        writer.writerow(list(metrics.values()))
+        writer.writerows(metrics.values())
 
     return tuple(metrics)
-
-
-def validate_model(
-    model,
-    dataloader,
-    loss_fn,
-    *,
-    xidx=0,
-    yidx=1,
-    epoch_number=-1,
-    classes=None,
-    plot=False,
-    dirname="./logs/"
-):
-    progress_bar = tqdm(dataloader)
-    running_loss = []
-    device = "mps"
-
-    if classes:
-        metrics = MetricEvaluater.create_metric_store()
-
-    model.to(device)
-    for data in progress_bar:
-        X, y_old = data[xidx], data[yidx]
-
-        y_pred = model(X.to(device)).to("cpu")
-        y = one_hot_encode(y_old)
-
-        loss = loss_fn(y_pred, y)
-
-        running_loss.append(loss.item())
-        status_text = f"running_loss: {mean(running_loss):.4f}; "
-
-        if classes:
-            MetricEvaluater.evaluate(metrics, y_pred=y_pred, y=y, n_classes=classes)
-            status_text += f"f1_score: {mean(metrics['f1_score']):.4f}"
-
-        progress_bar.set_description(status_text)
-
-    metrics["loss"] = mean(running_loss)
-
-    if classes:
-        pass
-
-    with open(f"{dirname}/validation_{epoch_number}.csv", "w+") as file:
-        writer = csv.writer(file)
-        writer.writerow(list(metrics.keys()))
-        writer.writerow(list(metrics.values()))
