@@ -1,12 +1,18 @@
 import torch
+import random
+import numpy as np
 from .utils import train_one_epoch
 from .models import MispronunciationDetectionNetwork, PhonemeRecognitionNetwork
 from .models import MDNClassificationHead, PRNClassificationHead
-from .hyperparameters import N_EPOCHS, PRN_CLF_OUT_DIM, LR
+from .hyperparameters import N_EPOCHS, PRN_CLF_OUT_DIM, LR, SEED
 from .melspectogram_encoder import MelSpectrogramEncoder
 from .phoneme_encoder import PhonemeEncoder
 from .phoneme_decoder import PhonemeDecoder
 from .word_decoder import WordDecoder
+
+torch.manual_seed(SEED)
+random.seed(SEED)
+np.random.seed(SEED)
 
 class Dhvani(torch.nn.Module):
     def __init__(
@@ -55,12 +61,12 @@ class Dhvani(torch.nn.Module):
             train_one_epoch(
                 self.phoneme_recognition_network,
                 train_dataloader,
-                prn_optimizer,
                 prn_loss_fn,
                 xidx=0,
                 yidx=2,
                 classes=PRN_CLF_OUT_DIM,
-                epoch_number=epoch_number
+                epoch_number=epoch_number,
+                optimizer=prn_optimizer,
             )
             """
             train_one_epoch(
@@ -73,7 +79,7 @@ class Dhvani(torch.nn.Module):
             )
             """
             print(f"Running Validation")
-            train_model(
+            train_one_epoch(
                 self.phoneme_recognition_network,
                 validation_dataloader,
                 prn_loss_fn,
