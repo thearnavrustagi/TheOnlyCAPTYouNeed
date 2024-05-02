@@ -107,10 +107,10 @@ class MelSpectrogramEncoder(torch.nn.Module):
 
     def forward(self, x):
         for conv_layer in self.convs:
-            x = self.batch_norm(x)
             x = conv_layer(x)
             x = self.dropout(x)
             x = self.activation(x)
+            x = self.batch_norm(x)
         x = torch.permute(x,(0,2,1))
         (x, _) = self.gru(x)
         x = self.activation(x)
