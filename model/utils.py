@@ -1,5 +1,6 @@
 import torch
 from numpy import mean
+import numpy as np
 from tqdm import tqdm
 from torcheval.metrics.functional import (
     multiclass_f1_score,
@@ -30,8 +31,10 @@ class MetricEvaluater(object):
                 case "precision":
                     val = MetricEvaluater.compute_precision(y_pred, y, n_classes)
                 case "recall":
+                    pass
                     val = MetricEvaluater.compute_recall(y_pred, y, n_classes)
                 case "f1_score":
+                    pass
                     val = MetricEvaluater.compute_f1_score(y_pred, y, n_classes)
             metrics[key].append(val)
 
@@ -45,12 +48,9 @@ class MetricEvaluater(object):
         labels_prediction = torch.argmax(y_pred, axis=-1)
         labels_real = torch.argmax(y, axis=-1)
         precisions = 0
-        for i in range(len(y_pred)):
-            precisions += multiclass_precision(
-                labels_prediction[i], labels_real[i], num_classes=n_classes
-            ).item()
-        return precisions / len(y_pred)
-
+        mask = labels_prediction == labels_real
+        return np.mean(mask.numpy())
+    
     # takes logits as input
     @staticmethod
     def compute_recall(y_pred, y, n_classes):
@@ -118,11 +118,10 @@ def train_one_epoch(
 
         if classes:
             MetricEvaluater.evaluate(metrics, y_pred=y_pred, y=y, n_classes=classes)
-            status_text += f"f1_score: {mean(metrics['f1_score']):.4f}; "
-            status_text += f"recall: {mean(metrics['recall']):.4f}; "
-            status_text += f"precision: {mean(metrics['precision']):.4f} "
+            #status_text += f"f1_score: {mean(metrics['f1_score']):.4f}; "
+            #status_text += f"recall: {mean(metrics['recall']):.4f}; "
+            status_text += f"accuracy: {mean(metrics['precision']):.4f} "
         progress_bar.set_description(status_text)
-        break
 
     metrics["loss"] = running_loss
 
