@@ -172,3 +172,4 @@ final_dataset/train/l1/audio
 final_dataset/train/l2/audio
 final_dataset/test/audio
 final_dataset
+logs/*
