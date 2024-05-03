@@ -122,7 +122,6 @@ def train_one_epoch(
             status_text += f"recall: {mean(metrics['recall']):.4f}; "
             status_text += f"precision: {mean(metrics['precision']):.4f} "
         progress_bar.set_description(status_text)
-        break
 
     metrics["loss"] = running_loss
 
