@@ -27,12 +27,15 @@ class L1SpeechDataset(Dataset):
         self.transcript_df = pd.read_csv(
             self.annotation_file, encoding="utf-8", sep="\t"
         )
+        self.transcript_df = self.transcript_df[self.transcript_df["file_identifier"].str.startswith("ss-") | self.transcript_df["file_identifier"].str.startswith("mss-")]
         self.transcript_df = self.transcript_df.map(lambda x: x.strip() if isinstance(x, str) else x)
         self.audio_files = glob(f"{self.audio_files_path}/*")
 
     def __getitem__(self, idx):
-        filename = self.audio_files[idx]
-        file_id = "-".join(filename.split("/")[-1].split("-")[:2])
+        base_idx = idx // 5
+        version_idx = idx % 5
+        file_id = self.transcript_df["file_identifier"].iloc[base_idx]
+        filename= f"{self.audio_files_path}/{file_id}-v{version_idx}.npy"
         mask = self.transcript_df["file_identifier"] == file_id
         transcription = self.transcript_df.loc[mask].iloc[0]
         error_p = eval(transcription["error_p"])
@@ -42,4 +45,4 @@ class L1SpeechDataset(Dataset):
         return (ms, np.array(error_p), tokenize(sentence))
 
     def __len__(self):
-        return len(self.audio_files)
+        return len(self.transcript_df) * 5
