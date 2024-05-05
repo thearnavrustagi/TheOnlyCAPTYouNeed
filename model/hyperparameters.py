@@ -2,7 +2,7 @@ import torch
 
 SEED=0
 N_EPOCHS = 1000
-LR = 1e-4
+LR = 3e-6
 
 IN_CHANNELS = 16
 OUT_CHANNELS = IN_CHANNELS

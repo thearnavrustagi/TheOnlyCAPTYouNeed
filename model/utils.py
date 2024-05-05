@@ -91,7 +91,7 @@ xidx: the index of the x (inputs) to the models
 yidx: the index of the expected outputs to the models
 """
 def train_one_epoch(
-    model, dataloader, loss_fn, *, xidx=0, yidx=1, classes=None, dirname="./logs", model_dir="./save_model", epoch_number=-1, train=True, optimizer=None
+    model, dataloader, loss_fn, *, xidx=0, yidx=1, classes=None, dirname="./logs", model_dir="./saved_models", epoch_number=-1, train=True, optimizer=None
 ):
     progress_bar = tqdm(dataloader)
     running_loss = []
@@ -124,7 +124,7 @@ def train_one_epoch(
         progress_bar.set_description(status_text)
 
     metrics["loss"] = running_loss
-    torch.save(model.state_dict(), f"{model_dir}/model_{epoch_number}.pt")
+    torch.save(model.state_dict(), f"{model_dir}/model_{epoch_number}.pth")
 
     if classes:
         pass
