@@ -173,3 +173,5 @@ final_dataset/train/l2/audio
 final_dataset/test/audio
 final_dataset
 logs/*
+save_model
+saved_model
