@@ -19,7 +19,7 @@ import os
 class MetricEvaluater(object):
     @staticmethod
     def create_metric_store():
-        return {"auc": [], "precision": [], "recall": [], "f1_score": []}
+        return {"precision": [], "recall": [], "f1_score": [], "accuracy":[]}
 
     @staticmethod
     def evaluate(metrics, *, y_pred, y, n_classes):
@@ -27,16 +27,15 @@ class MetricEvaluater(object):
             val = None
             match key:
                 case "auc":
-                    val = MetricEvaluater.compute_auc(y_pred, y, n_classes)
+                    metrics[key].append(MetricEvaluater.compute_auc(y_pred, y, n_classes))
                 case "precision":
-                    val = MetricEvaluater.compute_precision(y_pred, y, n_classes)
+                    metrics[key].append(MetricEvaluater.compute_precision(y_pred, y, n_classes))
                 case "recall":
-                    pass
-                    val = MetricEvaluater.compute_recall(y_pred, y, n_classes)
+                    metrics[key].append(MetricEvaluater.compute_recall(y_pred, y, n_classes))
                 case "f1_score":
-                    pass
-                    val = MetricEvaluater.compute_f1_score(y_pred, y, n_classes)
-            metrics[key].append(val)
+                    metrics[key].append(MetricEvaluater.compute_f1_score(y_pred, y, n_classes))
+                case "accuracy":
+                    metrics[key].append(MetricEvaluater.compute_accuracy(y_pred, y, n_classes))
 
     @staticmethod
     def compute_auc(y_pred, y, n_classes):
@@ -48,8 +47,11 @@ class MetricEvaluater(object):
         labels_prediction = torch.argmax(y_pred, axis=-1)
         labels_real = torch.argmax(y, axis=-1)
         precisions = 0
-        mask = labels_prediction == labels_real
-        return np.mean(mask.numpy())
+        for i in range(len(y_pred)):
+            precisions += multiclass_precision(
+                labels_prediction[i], labels_real[i], num_classes=n_classes
+            ).item()
+        return precisions / y_pred.shape[0]
     
     # takes logits as input
     @staticmethod
@@ -61,7 +63,7 @@ class MetricEvaluater(object):
             recalls += multiclass_recall(
                 labels_prediction[i], labels_real[i], num_classes=n_classes
             ).item()
-        return recalls / len(y_pred)
+        return recalls / y_pred.shape[0]
 
     # takes logits as input
     @staticmethod
@@ -73,7 +75,14 @@ class MetricEvaluater(object):
            f1_scores +=  multiclass_f1_score(
                 labels_prediction[i], labels_real[i], num_classes=n_classes
             ).item()
-        return f1_scores / len(y_pred)
+        return f1_scores / y_pred.shape[0]
+
+    def compute_accuracy(y_pred, y, n_classes):
+        labels_prediction = torch.argmax(y_pred, axis=-1)
+        labels_real = torch.argmax(y, axis=-1)
+        precisions = 0
+        mask = labels_prediction == labels_real
+        return np.mean(mask.numpy())
 
 
 def one_hot_encode(index):
@@ -91,7 +100,7 @@ xidx: the index of the x (inputs) to the models
 yidx: the index of the expected outputs to the models
 """
 def train_one_epoch(
-    model, dataloader, loss_fn, *, xidx=0, yidx=1, classes=None, dirname="./logs", model_dir="./save_model", epoch_number=-1, train=True, optimizer=None
+    model, dataloader, loss_fn, *, xidx=0, yidx=1, classes=None, dirname="./logs", model_dir="./saved_models", epoch_number=-1, train=True, optimizer=None
 ):
     progress_bar = tqdm(dataloader)
     running_loss = []
@@ -118,20 +127,26 @@ def train_one_epoch(
 
         if classes:
             MetricEvaluater.evaluate(metrics, y_pred=y_pred, y=y, n_classes=classes)
-            #status_text += f"f1_score: {mean(metrics['f1_score']):.4f}; "
-            #status_text += f"recall: {mean(metrics['recall']):.4f}; "
-            status_text += f"accuracy: {mean(metrics['precision']):.4f} "
+            status_text += f"f1_score: {mean(metrics['f1_score']):.4f}; "
+            status_text += f"recall: {mean(metrics['recall']):.4f}; "
+            status_text += f"precision: {mean(metrics['precision']):.4f} "
+            status_text += f"accuracy: {mean(metrics['accuracy']):.4f} "
         progress_bar.set_description(status_text)
 
     metrics["loss"] = running_loss
-    torch.save(model.state_dict(), f"{model_dir}/model_{epoch_number}.pt")
+    torch.save(model.state_dict(), f"{model_dir}/model_{epoch_number}.pth")
 
     if classes:
         pass
 
     with open(f"{dirname}/{'train' if train else 'validation'}_{epoch_number}.csv", "w+") as file:
         writer = csv.writer(file)
-        writer.writerow(list(metrics.keys()))
-        writer.writerows(metrics.values())
+        keys = list(metrics.keys())
+        vals = [[] for _ in range(len(keys))]
+        writer.writerow(keys)
+        for key, val in metrics.items():
+            vals[keys.index(key)] = val
+        writer.writerows(np.column_stack(vals))
+            
 
     return tuple(metrics)
