@@ -42,4 +42,4 @@ class L1SpeechDataset(Dataset):
         return (ms_scaled, np.array(error_p), tokenize(sentence))
 
     def __len__(self):
-        return len(self.transcript_df) * 5
+        return len(self.transcript_df) * 5  

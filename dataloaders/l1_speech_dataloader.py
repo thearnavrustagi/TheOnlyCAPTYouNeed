@@ -9,6 +9,8 @@ from .constants import (
     VAL_SPLIT
 )
 from .l1_speech_dataset import L1SpeechDataset
+from sklearn.model_selection import KFold
+
 
 def train_val_split(full_dataset, val_percent, random_seed=None):
     amount = len(full_dataset)
@@ -69,13 +71,30 @@ def collate_fn(data):
     return audio_features, error_p, transcriptions.type(torch.int64)
 
 
-dataset = L1SpeechDataset()
-train_dataset, val_dataset = train_val_split(dataset, VAL_SPLIT)
+def create_k_fold_dataloaders(k_folds=10, random_seed=None):
+    dataset = L1SpeechDataset()
+    kfold = KFold(n_splits=k_folds, shuffle=True, random_state=random_seed)
+    dataloaders = []
 
-train_dataloader = DataLoader(
-    train_dataset, shuffle=True, batch_size=N_BATCHES, collate_fn=collate_fn
-)
+    for fold, (train_idx, val_idx) in enumerate(kfold.split(dataset), start=1):
+        print(f"Fold {fold}/{k_folds}")
+        train_dataset = torch.utils.data.Subset(dataset, train_idx)
+        val_dataset = torch.utils.data.Subset(dataset, val_idx)
 
-val_dataloader = DataLoader(
-    val_dataset, shuffle=True, batch_size=N_BATCHES, collate_fn=collate_fn
-)
+        train_dataloader = DataLoader(
+            train_dataset,
+            batch_size=N_BATCHES,
+            shuffle=True,
+            collate_fn=collate_fn,
+        )
+
+        val_dataloader = DataLoader(
+            val_dataset,
+            batch_size=N_BATCHES,
+            shuffle=False,
+            collate_fn=collate_fn,
+        )
+
+        dataloaders.append((train_dataloader, val_dataloader))
+
+    return dataloaders
