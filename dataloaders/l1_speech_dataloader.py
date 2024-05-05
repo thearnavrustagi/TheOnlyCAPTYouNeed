@@ -77,7 +77,6 @@ def create_k_fold_dataloaders(k_folds=10, random_seed=None):
     dataloaders = []
 
     for fold, (train_idx, val_idx) in enumerate(kfold.split(dataset), start=1):
-        print(f"Fold {fold}/{k_folds}")
         train_dataset = torch.utils.data.Subset(dataset, train_idx)
         val_dataset = torch.utils.data.Subset(dataset, val_idx)
 
