@@ -38,7 +38,7 @@ class L1SpeechDataset(Dataset):
         sentence = transcription["sentence"]
         ms = np.load(filename)
         scaler = StandardScaler()
-        ms_scaled = scaler.fit_transform(ms.reshape(-1, 1)).flatten()
+        ms_scaled = scaler.fit_transform(ms)
         return (ms_scaled, np.array(error_p), tokenize(sentence))
 
     def __len__(self):
