@@ -27,12 +27,16 @@ class MetricEvaluater(object):
             val = None
             match key:
                 case "auc":
+                    pass
                     metrics[key].append(MetricEvaluater.compute_auc(y_pred, y, n_classes))
                 case "precision":
+                    pass
                     metrics[key].append(MetricEvaluater.compute_precision(y_pred, y, n_classes))
                 case "recall":
+                    pass
                     metrics[key].append(MetricEvaluater.compute_recall(y_pred, y, n_classes))
                 case "f1_score":
+                    pass
                     metrics[key].append(MetricEvaluater.compute_f1_score(y_pred, y, n_classes))
                 case "accuracy":
                     metrics[key].append(MetricEvaluater.compute_accuracy(y_pred, y, n_classes))
