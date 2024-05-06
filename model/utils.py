@@ -167,10 +167,10 @@ def train_one_epoch(
 
         if classes:
             MetricEvaluater.evaluate(metrics, y_pred=y_pred, y=y, n_classes=classes)
-            status_text += f"f1_score: {mean(metrics['f1_score']):.4f}; "
+            status_text += f"f1: {mean(metrics['f1_score']):.4f}; "
             status_text += f"recall: {mean(metrics['recall']):.4f}; "
-            status_text += f"precision: {mean(metrics['precision']):.4f} "
-            status_text += f"accuracy: {mean(metrics['accuracy']):.4f} "
+            status_text += f"prec: {mean(metrics['precision']):.4f}; "
+            status_text += f"acc: {mean(metrics['accuracy']):.4f} "
         progress_bar.set_description(status_text)
 
     metrics["loss"] = running_loss
@@ -182,7 +182,7 @@ def train_one_epoch(
             "optim": optimizer.state_dict(),
         }
         torch.save(
-            checkpoint, f"{model_dir}/model_epoch-{epoch_number}_fold-{fold}.pth"
+            checkpoint, f"{model_dir}/{task}_epoch-{epoch_number}_fold-{fold}.pth"
         )
 
     if classes:
