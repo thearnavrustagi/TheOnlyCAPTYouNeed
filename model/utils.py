@@ -7,9 +7,7 @@ from torcheval.metrics.functional import (
     multiclass_recall,
     multiclass_precision,
 )
-from .hyperparameters import (
-    PRN_CLF_OUT_DIM,
-)
+from .hyperparameters import PRN_CLF_OUT_DIM, GRADIENT_CLIPPING_VAL
 from torch.nn.functional import one_hot
 from torch.nn import Softmax
 import csv
@@ -130,6 +128,7 @@ def train_one_epoch(
     train=True,
     optimizer=None,
     fold=1,
+    grad_clip_val=GRADIENT_CLIPPING_VAL,
 ):
     progress_bar = tqdm(dataloader)
     running_loss = []
@@ -148,6 +147,9 @@ def train_one_epoch(
         loss = loss_fn(y_pred, y)
         if train:
             loss.backward()
+            torch.nn.utils.clip_grad_norm_(
+                model.parameters(), max_norm=grad_clip_val, norm_type=2
+            )
             optimizer.step()
             optimizer.zero_grad()
 
