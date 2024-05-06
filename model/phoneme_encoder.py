@@ -70,11 +70,27 @@ class PhonemeEncoder(torch.nn.Module):
             stride=stride,
         )
 
+        self.conv4 = nn.Conv1d(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=kernel_size,
+            padding=padding,
+            stride=stride,
+        )
+
+        self.conv5 = nn.Conv1d(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=kernel_size,
+            padding=padding,
+            stride=stride,
+        )
+
         self.dropout = torch.nn.Dropout(p=dropout)
         self.batch_norm = torch.nn.LayerNorm((out_channels, p_max_len))
 
-        self.convs = [self.conv1, self.conv2, self.conv3]
-        self.gru = nn.GRU(p_max_len, hidden_size=hidden_size)
+        self.convs = [self.conv1, self.conv2, self.conv3, self.conv4, self.conv5]
+        self.gru = nn.GRU(input_size=out_channels, hidden_size=hidden_size)
 
         self.embedding_table = torch.nn.Embedding(
             num_embeddings=p_max_len,
@@ -82,8 +98,8 @@ class PhonemeEncoder(torch.nn.Module):
         )
 
     """
-    IN SHAPE: (N, 144)
-    OUT SHAPE: (N, 16, 128)
+    IN SHAPE: (N, 256)
+    OUT SHAPE: (N, 256, 64)
     """
 
     def forward(self, x):
@@ -98,6 +114,7 @@ class PhonemeEncoder(torch.nn.Module):
             x = self.batch_norm(x)
             x = self.activation(x)
 
+        x = x.permute(0, 2, 1)
         # Apply GRU
         x, _ = self.gru(x)
         x = self.dropout(x)

@@ -46,7 +46,7 @@ class Dhvani(torch.nn.Module):
 
         return prn_out, mdn_out
 
-    def train(self, dataloaders, *, epochs=N_EPOCHS, fold=None):
+    def train(self, dataloaders, *, epochs=N_EPOCHS, fold_no=None):
         prn_optimizer = torch.optim.Adam(
             self.phoneme_recognition_network.parameters(), lr=LR
         )
@@ -56,36 +56,35 @@ class Dhvani(torch.nn.Module):
 
         train_dataloader, validation_dataloader, test_dataloader = dataloaders
 
-        prn_loss_fn = torch.nn.CrossEntropyLoss()
-        mdn_loss_fn = torch.nn.BCELoss()
+        loss_fn = torch.nn.CrossEntropyLoss()
 
-        if fold == None:
-            fold = 1
+        if fold_no == None:
+            fold_no = 1
 
         for epoch_number in range(epochs):
             print(f"Training EPOCH:{epoch_number}")
-            """
             train_one_epoch(
                 self.phoneme_recognition_network,
                 train_dataloader,
-                prn_loss_fn,
+                loss_fn,
                 xidx=0,
                 yidx=2,
-                classes=MDN_CLF_OUT_DIM,
+                classes=PRN_CLF_OUT_DIM,
                 epoch_number=epoch_number,
                 optimizer=prn_optimizer,
-                fold=fold,
-                task="PRN"
+                fold=fold_no,
+                task="PRN",
             )
-            """
 
             train_one_epoch(
                 self.mispronunciation_detection_network,
                 train_dataloader,
-                mdn_optimizer,
-                mdn_loss_fn,
+                loss_fn,
                 xidx=2,
                 yidx=1,
+                classes=MDN_CLF_OUT_DIM,
+                optimizer=mdn_optimizer,
+                fold=fold_no,
                 task="MDN",
             )
 
@@ -93,26 +92,26 @@ class Dhvani(torch.nn.Module):
             train_one_epoch(
                 self.phoneme_recognition_network,
                 validation_dataloader,
-                prn_loss_fn,
+                loss_fn,
                 xidx=0,
                 yidx=2,
                 epoch_number=epoch_number,
                 classes=PRN_CLF_OUT_DIM,
                 train=False,
-                fold=fold,
+                fold=fold_no,
                 task="PRN",
             )
 
             train_one_epoch(
                 self.mispronunciation_detection_network,
                 validation_dataloader,
-                mdn_loss_fn,
+                loss_fn,
                 xidx=2,
                 yidx=1,
                 epoch_number=epoch_number,
                 classes=MDN_CLF_OUT_DIM,
                 train=False,
-                fold=fold,
+                fold=fold_no,
                 task="MDN",
             )
 

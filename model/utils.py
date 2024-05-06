@@ -8,10 +8,11 @@ from torcheval.metrics.functional import (
     multiclass_precision,
 )
 from .hyperparameters import PRN_CLF_OUT_DIM, GRADIENT_CLIPPING_VAL
-from torch.nn.functional import one_hot
-from torch.nn import Softmax
 import csv
-import os
+
+import logging
+
+logging.getLogger().setLevel(logging.ERROR)  # Only log errors and critical messages
 
 
 class MetricEvaluater(object):
@@ -24,25 +25,30 @@ class MetricEvaluater(object):
         for key in metrics.keys():
             match key:
                 case "auc":
-                    return metrics[key].append(
+                    metrics[key].append(
                         MetricEvaluater.compute_auc(y_pred, y, n_classes)
                     )
+                    continue
                 case "precision":
-                    return metrics[key].append(
+                    metrics[key].append(
                         MetricEvaluater.compute_precision(y_pred, y, n_classes)
                     )
+                    continue
                 case "recall":
-                    return metrics[key].append(
+                    metrics[key].append(
                         MetricEvaluater.compute_recall(y_pred, y, n_classes)
                     )
+                    continue
                 case "f1_score":
-                    return metrics[key].append(
+                    metrics[key].append(
                         MetricEvaluater.compute_f1_score(y_pred, y, n_classes)
                     )
+                    continue
                 case "accuracy":
-                    return metrics[key].append(
+                    metrics[key].append(
                         MetricEvaluater.compute_accuracy(y_pred, y, n_classes)
                     )
+                    continue
 
     @staticmethod
     def compute_auc(y_pred, y, n_classes):
@@ -56,7 +62,10 @@ class MetricEvaluater(object):
         precisions = 0
         for i in range(len(y_pred)):
             precisions += multiclass_precision(
-                labels_prediction[i], labels_real[i], num_classes=n_classes
+                labels_prediction[i],
+                labels_real[i],
+                num_classes=n_classes,
+                average="weighted",
             ).item()
         return precisions / y_pred.shape[0]
 
@@ -68,7 +77,9 @@ class MetricEvaluater(object):
         recalls = 0
         for i in range(len(y_pred)):
             recalls += multiclass_recall(
-                labels_prediction[i], labels_real[i], num_classes=n_classes
+                labels_prediction[i],
+                labels_real[i],
+                num_classes=n_classes,
             ).item()
         return recalls / y_pred.shape[0]
 
@@ -80,20 +91,21 @@ class MetricEvaluater(object):
         f1_scores = 0
         for i in range(len(y_pred)):
             f1_scores += multiclass_f1_score(
-                labels_prediction[i], labels_real[i], num_classes=n_classes
+                labels_prediction[i],
+                labels_real[i],
+                num_classes=n_classes,
+                average="weighted",
             ).item()
         return f1_scores / y_pred.shape[0]
 
     def compute_accuracy(y_pred, y, n_classes):
         labels_prediction = torch.argmax(y_pred, axis=-1)
         labels_real = torch.argmax(y, axis=-1)
-        precisions = 0
         mask = labels_prediction == labels_real
         return np.mean(mask.numpy())
 
 
-def one_hot_encode(index):
-    unique_classes = PRN_CLF_OUT_DIM
+def one_hot_encode(index, *, unique_classes=None):
     output_size = (index.shape[0], index.shape[1], unique_classes)
 
     one_hot_tensor = torch.zeros(output_size)
@@ -139,7 +151,7 @@ def train_one_epoch(
         X, y_old = data[xidx], data[yidx]
 
         y_pred = model(X.to(device)).to("cpu")
-        y = one_hot_encode(y_old)
+        y = one_hot_encode(y_old, unique_classes=classes)
 
         loss = loss_fn(y_pred, y)
         if train:
@@ -162,13 +174,16 @@ def train_one_epoch(
         progress_bar.set_description(status_text)
 
     metrics["loss"] = running_loss
-    checkpoint = {
-        "epoch": epoch_number,
-        "fold": fold,
-        "model": model.state_dict(),
-        "optim": optimizer.state_dict(),
-    }
-    torch.save(checkpoint, f"{model_dir}/model_epoch-{epoch_number}_fold-{fold}.pth")
+    if train:
+        checkpoint = {
+            "epoch": epoch_number,
+            "fold": fold,
+            "model": model.state_dict(),
+            "optim": optimizer.state_dict(),
+        }
+        torch.save(
+            checkpoint, f"{model_dir}/model_epoch-{epoch_number}_fold-{fold}.pth"
+        )
 
     if classes:
         pass

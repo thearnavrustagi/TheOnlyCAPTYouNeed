@@ -48,6 +48,7 @@ requests==2.31.0
 scikit-learn==1.4.1.post1
 scipy==1.12.0
 seaborn==0.13.2
+shutup==0.2.0
 six==1.16.0
 soundfile==0.12.1
 soxr==0.3.7

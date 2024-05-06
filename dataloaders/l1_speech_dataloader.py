@@ -59,7 +59,7 @@ def collate_fn(data):
         transcriptions[idx] = transcription.type(torch.int64)
         error_p[idx] = e_p
 
-    return audio_features, error_p, transcriptions.type(torch.int64)
+    return audio_features, error_p.type(torch.int64), transcriptions.type(torch.int64)
 
 
 def create_k_fold_dataloaders(k_folds=10, random_seed=None):
