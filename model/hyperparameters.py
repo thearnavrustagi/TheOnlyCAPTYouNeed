@@ -47,4 +47,4 @@ PRN_CLF_OUT_DIM = 128
 MDN_CLF_IN_DIM = (
     P_DECODER_GRU_HIDDEN_SIZE  # word decoder & phoneme decoder have the same dimensions
 )
-MDN_CLF_OUT_DIM = 1
+MDN_CLF_OUT_DIM = 2

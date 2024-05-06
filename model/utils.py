@@ -22,30 +22,25 @@ class MetricEvaluater(object):
     @staticmethod
     def evaluate(metrics, *, y_pred, y, n_classes):
         for key in metrics.keys():
-            val = None
             match key:
                 case "auc":
-                    pass
-                    metrics[key].append(
+                    return metrics[key].append(
                         MetricEvaluater.compute_auc(y_pred, y, n_classes)
                     )
                 case "precision":
-                    pass
-                    metrics[key].append(
+                    return metrics[key].append(
                         MetricEvaluater.compute_precision(y_pred, y, n_classes)
                     )
                 case "recall":
-                    pass
-                    metrics[key].append(
+                    return metrics[key].append(
                         MetricEvaluater.compute_recall(y_pred, y, n_classes)
                     )
                 case "f1_score":
-                    pass
-                    metrics[key].append(
+                    return metrics[key].append(
                         MetricEvaluater.compute_f1_score(y_pred, y, n_classes)
                     )
                 case "accuracy":
-                    metrics[key].append(
+                    return metrics[key].append(
                         MetricEvaluater.compute_accuracy(y_pred, y, n_classes)
                     )
 
@@ -129,6 +124,7 @@ def train_one_epoch(
     optimizer=None,
     fold=1,
     grad_clip_val=GRADIENT_CLIPPING_VAL,
+    task=None,
 ):
     progress_bar = tqdm(dataloader)
     running_loss = []
@@ -139,6 +135,7 @@ def train_one_epoch(
     device = "mps" if torch.backends.mps.is_available() else "cpu"
     model.to(device)
     for data in progress_bar:
+        status_text = f"[{task}] "
         X, y_old = data[xidx], data[yidx]
 
         y_pred = model(X.to(device)).to("cpu")
@@ -154,7 +151,7 @@ def train_one_epoch(
             optimizer.zero_grad()
 
         running_loss.append(loss.item())
-        status_text = f"running_loss: {mean(running_loss):.4f}; "
+        status_text += f"running_loss: {mean(running_loss):.4f}; "
 
         if classes:
             MetricEvaluater.evaluate(metrics, y_pred=y_pred, y=y, n_classes=classes)
@@ -177,7 +174,7 @@ def train_one_epoch(
         pass
 
     with open(
-        f"{dirname}/{'train' if train else 'validation'}_epoch-{epoch_number}_fold-{fold}.csv",
+        f"{dirname}/{task}_{'train' if train else 'validation'}_epoch-{epoch_number}_fold-{fold}.csv",
         "w+",
     ) as file:
         writer = csv.writer(file)

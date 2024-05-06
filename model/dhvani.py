@@ -4,7 +4,7 @@ import numpy as np
 from .utils import train_one_epoch
 from .models import MispronunciationDetectionNetwork, PhonemeRecognitionNetwork
 from .models import MDNClassificationHead, PRNClassificationHead
-from .hyperparameters import N_EPOCHS, PRN_CLF_OUT_DIM, LR, SEED
+from .hyperparameters import N_EPOCHS, PRN_CLF_OUT_DIM, LR, SEED, MDN_CLF_OUT_DIM
 from .melspectogram_encoder import MelSpectrogramEncoder
 from .phoneme_encoder import PhonemeEncoder
 from .phoneme_decoder import PhonemeDecoder
@@ -64,18 +64,21 @@ class Dhvani(torch.nn.Module):
 
         for epoch_number in range(epochs):
             print(f"Training EPOCH:{epoch_number}")
+            """
             train_one_epoch(
                 self.phoneme_recognition_network,
                 train_dataloader,
                 prn_loss_fn,
                 xidx=0,
                 yidx=2,
-                classes=PRN_CLF_OUT_DIM,
+                classes=MDN_CLF_OUT_DIM,
                 epoch_number=epoch_number,
                 optimizer=prn_optimizer,
                 fold=fold,
+                task="PRN"
             )
             """
+
             train_one_epoch(
                 self.mispronunciation_detection_network,
                 train_dataloader,
@@ -83,8 +86,9 @@ class Dhvani(torch.nn.Module):
                 mdn_loss_fn,
                 xidx=2,
                 yidx=1,
+                task="MDN",
             )
-            """
+
             print(f"Running Validation")
             train_one_epoch(
                 self.phoneme_recognition_network,
@@ -96,16 +100,21 @@ class Dhvani(torch.nn.Module):
                 classes=PRN_CLF_OUT_DIM,
                 train=False,
                 fold=fold,
+                task="PRN",
             )
-            """
-            validate_model(
+
+            train_one_epoch(
                 self.mispronunciation_detection_network,
                 validation_dataloader,
                 mdn_loss_fn,
                 xidx=2,
                 yidx=1,
+                epoch_number=epoch_number,
+                classes=MDN_CLF_OUT_DIM,
+                train=False,
+                fold=fold,
+                task="MDN",
             )
-            """
 
 
 if __name__ == "__main__":
