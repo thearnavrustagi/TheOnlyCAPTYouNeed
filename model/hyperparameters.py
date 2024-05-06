@@ -1,6 +1,6 @@
 import torch
 
-SEED=0
+SEED = 0
 N_EPOCHS = 1000
 LR = 3e-6
 
@@ -43,5 +43,7 @@ PRN_CLF_IN_DIM = P_DECODER_GRU_HIDDEN_SIZE
 PRN_CLF_OUT_DIM = 128
 
 # MDN Classifier
-MDN_CLF_IN_DIM = P_DECODER_GRU_HIDDEN_SIZE # word decoder & phoneme decoder have the same dimensions
+MDN_CLF_IN_DIM = (
+    P_DECODER_GRU_HIDDEN_SIZE  # word decoder & phoneme decoder have the same dimensions
+)
 MDN_CLF_OUT_DIM = 1

@@ -14,6 +14,7 @@ torch.manual_seed(SEED)
 random.seed(SEED)
 np.random.seed(SEED)
 
+
 class Dhvani(torch.nn.Module):
     def __init__(
         self,
@@ -45,8 +46,10 @@ class Dhvani(torch.nn.Module):
 
         return prn_out, mdn_out
 
-    def train(self, dataloaders, *, epochs=N_EPOCHS):
-        prn_optimizer = torch.optim.Adam(self.phoneme_recognition_network.parameters(), lr=LR)
+    def train(self, dataloaders, *, epochs=N_EPOCHS, fold=None):
+        prn_optimizer = torch.optim.Adam(
+            self.phoneme_recognition_network.parameters(), lr=LR
+        )
         mdn_optimizer = torch.optim.Adam(
             self.mispronunciation_detection_network.parameters(), lr=LR
         )
@@ -55,6 +58,9 @@ class Dhvani(torch.nn.Module):
 
         prn_loss_fn = torch.nn.CrossEntropyLoss()
         mdn_loss_fn = torch.nn.BCELoss()
+
+        if fold == None:
+            fold = 1
 
         for epoch_number in range(epochs):
             print(f"Training EPOCH:{epoch_number}")
@@ -67,6 +73,7 @@ class Dhvani(torch.nn.Module):
                 classes=PRN_CLF_OUT_DIM,
                 epoch_number=epoch_number,
                 optimizer=prn_optimizer,
+                fold=fold,
             )
             """
             train_one_epoch(
@@ -87,7 +94,8 @@ class Dhvani(torch.nn.Module):
                 yidx=2,
                 epoch_number=epoch_number,
                 classes=PRN_CLF_OUT_DIM,
-                train=False
+                train=False,
+                fold=fold,
             )
             """
             validate_model(

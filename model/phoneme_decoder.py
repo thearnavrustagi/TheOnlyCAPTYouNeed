@@ -5,7 +5,7 @@ from .hyperparameters import (
     P_DECODER_GRU_HIDDEN_SIZE,
     P_DECODER_GRU_INPUT_SIZE,
     P_DECODER_DROPOUT,
-    P_DECODER_GRU_N_LAYERS
+    P_DECODER_GRU_N_LAYERS,
 )
 
 
@@ -17,7 +17,7 @@ class PhonemeDecoder(nn.Module):
         num_heads=P_DECODER_ATTN_N_HEADS,
         gru_input_size=P_DECODER_GRU_INPUT_SIZE,
         gru_hidden_size=P_DECODER_GRU_HIDDEN_SIZE,
-	    gru_n_layers=P_DECODER_GRU_N_LAYERS,
+        gru_n_layers=P_DECODER_GRU_N_LAYERS,
         dropout=P_DECODER_DROPOUT,
     ):
         super().__init__()
@@ -35,7 +35,10 @@ class PhonemeDecoder(nn.Module):
         )
 
         self.gru = nn.GRU(
-            self.gru_input_size, hidden_size=self.gru_hidden_size, num_layers=self.gru_n_layers, dropout=dropout
+            self.gru_input_size,
+            hidden_size=self.gru_hidden_size,
+            num_layers=self.gru_n_layers,
+            dropout=dropout,
         )
         self.dropout = nn.Dropout(p=dropout)
 

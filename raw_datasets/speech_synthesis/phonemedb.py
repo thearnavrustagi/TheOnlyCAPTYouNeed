@@ -77,6 +77,7 @@ class PhonemeDataBase(object):
         else:
             return None
 
+
 if __name__ == "__main__":
     pdb = PhonemeDataBase()
     print(len(pdb.phonemes))

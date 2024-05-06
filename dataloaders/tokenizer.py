@@ -64,6 +64,8 @@ phonemes = """
 फ़
 य़
 """.split()
+
+
 def tokenize(arg):
     global phonemes
     arg = arg.replace(" ", "")
@@ -71,6 +73,6 @@ def tokenize(arg):
 
     for char in arg:
         if char in phonemes:
-            tokenized_line.append(phonemes.index(char)+1) 
+            tokenized_line.append(phonemes.index(char) + 1)
 
     return tokenized_line
