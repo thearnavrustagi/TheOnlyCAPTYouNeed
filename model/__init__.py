@@ -4,4 +4,9 @@ from .phoneme_encoder import PhonemeEncoder
 from .phoneme_decoder import PhonemeDecoder
 from .word_decoder import WordDecoder
 from .dhvani import Dhvani
-from .models import MispronunciationDetectionNetwork, PhonemeRecognitionNetwork, PRNClassificationHead, MDNClassificationHead
+from .models import (
+    MispronunciationDetectionNetwork,
+    PhonemeRecognitionNetwork,
+    PRNClassificationHead,
+    MDNClassificationHead,
+)

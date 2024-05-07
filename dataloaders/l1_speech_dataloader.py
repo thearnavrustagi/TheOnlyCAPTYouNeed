@@ -1,13 +1,7 @@
 import torch
 import numpy as np
 from torch.utils.data import DataLoader, random_split
-from .constants import (
-    SENTENCE_MAX_LEN,
-    MS_MAX_LEN,
-    N_BATCHES,
-    WORD_MAX_LEN,
-    VAL_SPLIT
-)
+from .constants import SENTENCE_MAX_LEN, MS_MAX_LEN, N_BATCHES, WORD_MAX_LEN, VAL_SPLIT
 from .l1_speech_dataset import L1SpeechDataset
 from sklearn.model_selection import KFold
 
@@ -15,20 +9,17 @@ from sklearn.model_selection import KFold
 def train_val_split(full_dataset, val_percent, random_seed=None):
     amount = len(full_dataset)
 
-    val_amount = (
-        int(amount * val_percent)
-        if val_percent is not None else 0)
+    val_amount = int(amount * val_percent) if val_percent is not None else 0
     train_amount = amount - val_amount
 
     train_dataset, val_dataset = random_split(
         full_dataset,
         (train_amount, val_amount),
-        generator=(
-            torch.Generator().manual_seed(random_seed)
-            if random_seed
-            else None))
-    
+        generator=(torch.Generator().manual_seed(random_seed) if random_seed else None),
+    )
+
     return train_dataset, val_dataset
+
 
 def collate_fn(data):
     audio_features = torch.zeros(len(data), data[0][0].shape[0], MS_MAX_LEN)
@@ -68,7 +59,7 @@ def collate_fn(data):
         transcriptions[idx] = transcription.type(torch.int64)
         error_p[idx] = e_p
 
-    return audio_features, error_p, transcriptions.type(torch.int64)
+    return audio_features, error_p.type(torch.int64), transcriptions.type(torch.int64)
 
 
 def create_k_fold_dataloaders(k_folds=10, random_seed=None):

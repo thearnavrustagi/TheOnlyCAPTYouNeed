@@ -4,7 +4,7 @@ import numpy as np
 from .utils import train_one_epoch
 from .models import MispronunciationDetectionNetwork, PhonemeRecognitionNetwork
 from .models import MDNClassificationHead, PRNClassificationHead
-from .hyperparameters import N_EPOCHS, PRN_CLF_OUT_DIM, LR, SEED
+from .hyperparameters import N_EPOCHS, PRN_CLF_OUT_DIM, LR, SEED, MDN_CLF_OUT_DIM
 from .melspectogram_encoder import MelSpectrogramEncoder
 from .phoneme_encoder import PhonemeEncoder
 from .phoneme_decoder import PhonemeDecoder
@@ -13,6 +13,7 @@ from .word_decoder import WordDecoder
 torch.manual_seed(SEED)
 random.seed(SEED)
 np.random.seed(SEED)
+
 
 class Dhvani(torch.nn.Module):
     def __init__(
@@ -45,59 +46,74 @@ class Dhvani(torch.nn.Module):
 
         return prn_out, mdn_out
 
-    def train(self, dataloaders, *, epochs=N_EPOCHS):
-        prn_optimizer = torch.optim.Adam(self.phoneme_recognition_network.parameters(), lr=LR)
+    def train(self, dataloaders, *, epochs=N_EPOCHS, fold_no=None):
+        prn_optimizer = torch.optim.Adam(
+            self.phoneme_recognition_network.parameters(), lr=LR
+        )
         mdn_optimizer = torch.optim.Adam(
             self.mispronunciation_detection_network.parameters(), lr=LR
         )
 
         train_dataloader, validation_dataloader, test_dataloader = dataloaders
 
-        prn_loss_fn = torch.nn.CrossEntropyLoss()
-        mdn_loss_fn = torch.nn.BCELoss()
+        loss_fn = torch.nn.CrossEntropyLoss()
+
+        if fold_no == None:
+            fold_no = 1
 
         for epoch_number in range(epochs):
             print(f"Training EPOCH:{epoch_number}")
             train_one_epoch(
                 self.phoneme_recognition_network,
                 train_dataloader,
-                prn_loss_fn,
+                loss_fn,
                 xidx=0,
                 yidx=2,
                 classes=PRN_CLF_OUT_DIM,
                 epoch_number=epoch_number,
                 optimizer=prn_optimizer,
+                fold=fold_no,
+                task="PRN",
             )
-            """
+
             train_one_epoch(
                 self.mispronunciation_detection_network,
                 train_dataloader,
-                mdn_optimizer,
-                mdn_loss_fn,
+                loss_fn,
                 xidx=2,
                 yidx=1,
+                classes=MDN_CLF_OUT_DIM,
+                optimizer=mdn_optimizer,
+                fold=fold_no,
+                task="MDN",
             )
-            """
+
             print(f"Running Validation")
             train_one_epoch(
                 self.phoneme_recognition_network,
                 validation_dataloader,
-                prn_loss_fn,
+                loss_fn,
                 xidx=0,
                 yidx=2,
                 epoch_number=epoch_number,
                 classes=PRN_CLF_OUT_DIM,
-                train=False
+                train=False,
+                fold=fold_no,
+                task="PRN",
             )
-            """
-            validate_model(
+
+            train_one_epoch(
                 self.mispronunciation_detection_network,
                 validation_dataloader,
-                mdn_loss_fn,
+                loss_fn,
                 xidx=2,
                 yidx=1,
+                epoch_number=epoch_number,
+                classes=MDN_CLF_OUT_DIM,
+                train=False,
+                fold=fold_no,
+                task="MDN",
             )
-            """
 
 
 if __name__ == "__main__":
