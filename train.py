@@ -3,6 +3,7 @@ from model import Dhvani
 
 if __name__ == "__main__":
     dhvani = Dhvani()
+    print(sum(p.numel() for p in dhvani.parameters()))
     k_folds = 10
     random_seed = 42
     dataloaders = create_k_fold_dataloaders(k_folds=k_folds, random_seed=random_seed)
