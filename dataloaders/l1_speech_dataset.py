@@ -7,8 +7,16 @@ import librosa
 from .tokenizer import tokenize
 from sklearn.preprocessing import StandardScaler
 
+
 class L1SpeechDataset(Dataset):
-    def __init__(self, *, data_path="./final_dataset/$split$/l1", annotation_file_name="temp.txt", audio_directory_name="audio", split="train"):
+    def __init__(
+        self,
+        *,
+        data_path="./final_dataset/$split$/l1",
+        annotation_file_name="temp.txt",
+        audio_directory_name="audio",
+        split="train",
+    ):
         self.split = split.lower()
         self.data_path = data_path.replace("$split$", split)
         self.annotation_file_name = annotation_file_name
@@ -42,4 +50,4 @@ class L1SpeechDataset(Dataset):
         return (ms_scaled, np.array(error_p), tokenize(sentence))
 
     def __len__(self):
-        return len(self.transcript_df) * 5  
+        return len(self.transcript_df) * 5
