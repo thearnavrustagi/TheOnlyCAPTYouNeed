@@ -1,3 +1,7 @@
+from .constants import (
+    END_OF_SENTENCE,
+    END_OF_WORD
+)
 phonemes = """
 ँ
 ं
@@ -65,7 +69,6 @@ phonemes = """
 य़
 """.split()
 
-
 def tokenize(arg):
     global phonemes
     arg = arg.replace(" ", "")
@@ -74,5 +77,7 @@ def tokenize(arg):
     for char in arg:
         if char in phonemes:
             tokenized_line.append(phonemes.index(char) + 1)
+        elif char == ' ':
+            tokenized_line.append(END_OF_WORD)
 
-    return tokenized_line + [len(phonemes)]
+    return tokenized_line + [END_OF_SENTENCE]

@@ -1,7 +1,7 @@
 import torch
 
 SEED = 0
-N_EPOCHS = 1000
+N_EPOCHS = 100
 LR = 3e-6
 GRADIENT_CLIPPING_VAL = 5
 
