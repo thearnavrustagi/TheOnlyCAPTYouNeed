@@ -85,6 +85,7 @@ class Dhvani(torch.nn.Module):
                 classes=MDN_CLF_OUT_DIM,
                 optimizer=mdn_optimizer,
                 fold=fold_no,
+                epoch_number=epoch_number,
                 task="MDN",
             )
 

@@ -23,7 +23,6 @@ class PhonemeDecoder(nn.Module):
         super().__init__()
         self.embed_dim = embed_dim
         self.num_heads = num_heads
-        self.pool = pool
 
         self.gru_hidden_size = gru_hidden_size
         self.gru_input_size = gru_input_size

@@ -41,10 +41,10 @@ W_DECODER_GRU_INPUT_SIZE = W_DECODER_ATTN_EMBED_DIM
 
 # PRN Classifier
 PRN_CLF_IN_DIM = P_DECODER_GRU_HIDDEN_SIZE
-PRN_CLF_OUT_DIM = 65
+PRN_CLF_OUT_DIM = 66
 
 # MDN Classifier
 MDN_CLF_IN_DIM = (
     P_DECODER_GRU_HIDDEN_SIZE  # word decoder & phoneme decoder have the same dimensions
 )
-MDN_CLF_OUT_DIM = 2
+MDN_CLF_OUT_DIM = 3
