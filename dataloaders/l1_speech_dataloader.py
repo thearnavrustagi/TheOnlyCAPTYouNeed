@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 from torch.utils.data import DataLoader, random_split
-from .constants import SENTENCE_MAX_LEN, MS_MAX_LEN, N_BATCHES, WORD_MAX_LEN, VAL_SPLIT
+from .constants import SENTENCE_MAX_LEN, MS_MAX_LEN, N_BATCHES, WORD_MAX_LEN
 from .l1_speech_dataset import L1SpeechDataset
 from sklearn.model_selection import KFold
 
