@@ -42,7 +42,7 @@ class L1SpeechDataset(Dataset):
         filename = f"{self.audio_files_path}/{file_id}-v{version_idx}.npy"
         mask = self.transcript_df["file_identifier"] == file_id
         transcription = self.transcript_df.loc[mask].iloc[0]
-        error_p = eval(transcription["error_p"])
+        error_p = eval(transcription["error_p"]) + [2]
         sentence = transcription["sentence"]
         ms = np.load(filename)
         scaler = StandardScaler()

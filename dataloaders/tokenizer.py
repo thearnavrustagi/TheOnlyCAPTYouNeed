@@ -75,4 +75,4 @@ def tokenize(arg):
         if char in phonemes:
             tokenized_line.append(phonemes.index(char) + 1)
 
-    return tokenized_line
+    return tokenized_line + [len(phonemes)]
