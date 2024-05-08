@@ -46,7 +46,15 @@ class Dhvani(torch.nn.Module):
 
         return prn_out, mdn_out
 
-    def train(self, dataloaders, *, epochs=N_EPOCHS, fold_no=None, training_prn=True, training_mdn=True):
+    def train(
+        self,
+        dataloaders,
+        *,
+        epochs=N_EPOCHS,
+        fold_no=None,
+        training_prn=True,
+        training_mdn=True,
+    ):
         prn_optimizer = torch.optim.Adam(
             self.phoneme_recognition_network.parameters(), lr=LR
         )
