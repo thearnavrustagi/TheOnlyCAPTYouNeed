@@ -61,7 +61,6 @@ class Dhvani(torch.nn.Module):
         mdn_optimizer = torch.optim.Adam(
             self.mispronunciation_detection_network.parameters(), lr=LR
         )
-
         train_dataloader, validation_dataloader, test_dataloader = dataloaders
 
         loss_fn = torch.nn.CrossEntropyLoss()

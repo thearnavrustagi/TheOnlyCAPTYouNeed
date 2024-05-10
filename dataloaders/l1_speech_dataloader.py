@@ -68,6 +68,7 @@ def create_k_fold_dataloaders(k_folds=10, random_seed=None):
     dataloaders = []
 
     for fold, (train_idx, val_idx) in enumerate(kfold.split(dataset), start=1):
+        test_dataset = L1SpeechDataset(split="test")
         train_dataset = torch.utils.data.Subset(dataset, train_idx)
         val_dataset = torch.utils.data.Subset(dataset, val_idx)
 
@@ -85,6 +86,13 @@ def create_k_fold_dataloaders(k_folds=10, random_seed=None):
             collate_fn=collate_fn,
         )
 
-        dataloaders.append((train_dataloader, val_dataloader))
+        test_dataloader = DataLoader(
+            test_dataset, 
+            batch_size=N_BATCHES, 
+            shuffle=False, 
+            collate_fn=collate_fn
+        )
+
+        dataloaders.append((train_dataloader, val_dataloader, test_dataloader))
 
     return dataloaders

@@ -9,5 +9,5 @@ def pronounce_hindi_sound(sound):
 
 
 if __name__ == "__main__":
-    sound = "ज"
+    sound = "jdasjdaskja"
     print(pronounce_hindi_sound(sound))
