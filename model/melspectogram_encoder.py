@@ -123,6 +123,8 @@ class MelSpectrogramEncoder(torch.nn.Module):
     def forward(self, x):
         mask = torch.squeeze(torch.sum((x != 0).float(), axis=-2))
         mask = torch.sum((mask != 0).float(), axis=-1)
+        mask = mask.to("cpu")
+
 
         for conv_layer in self.convs:
             x = conv_layer(x)
@@ -131,11 +133,10 @@ class MelSpectrogramEncoder(torch.nn.Module):
             x = self.batch_norm(x)
         x = torch.permute(x, (0, 2, 1))
 
-        x = torch.nn.utils.rnn.pack_padded_sequence(x, mask, batch_first=True, enforce_sorted=False)
+        #x = torch.nn.utils.rnn.pack_padded_sequence(x, mask, batch_first=True, enforce_sorted=False)
         # Apply GRU
         x, _ = self.gru(x)
-        x, mask = torch.nn.utils.rnn.pad_packed_sequence(x, batch_first=True, total_length=MS_MAX_LEN)
-        print(x.shape)
+        #x, mask = torch.nn.utils.rnn.pad_packed_sequence(x, batch_first=True, total_length=MS_MAX_LEN)
         
         x = self.activation(x)
         x = self.dropout(x)

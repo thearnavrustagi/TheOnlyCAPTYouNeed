@@ -9,6 +9,6 @@ if __name__ == "__main__":
         dhvani = Dhvani()
         print(f"Training on Fold {fold}/{k_folds}")
         dhvani.train(
-            (train_dataloader, val_dataloader, None), fold_no=fold,
+            (train_dataloader, val_dataloader, None), fold_no=fold, training_mdn=False
         )
         break

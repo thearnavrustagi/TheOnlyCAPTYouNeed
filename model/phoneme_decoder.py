@@ -47,6 +47,8 @@ class PhonemeDecoder(nn.Module):
     def forward(self, x):
         mask = torch.squeeze(torch.sum((x != 0).float(), axis=-2))
         mask = torch.sum((mask != 0).float(), axis=-1)
+        device = "mps" if torch.backends.mps.is_available() else "cpu"
+        mask = mask.to("cpu")
 
         attn_output, _ = self.self_attn(x, x, x)
         x = x + attn_output
