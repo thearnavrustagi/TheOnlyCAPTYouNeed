@@ -1,3 +1,4 @@
+import torch
 from torch import nn
 from .hyperparameters import (
     P_DECODER_ATTN_EMBED_DIM,
@@ -6,6 +7,7 @@ from .hyperparameters import (
     P_DECODER_GRU_INPUT_SIZE,
     P_DECODER_DROPOUT,
     P_DECODER_GRU_N_LAYERS,
+    MS_MAX_LEN
 )
 
 
@@ -43,9 +45,17 @@ class PhonemeDecoder(nn.Module):
         self.dropout = nn.Dropout(p=dropout)
 
     def forward(self, x):
+        mask = torch.squeeze(torch.sum((x != 0).float(), axis=-2))
+        mask = torch.sum((mask != 0).float(), axis=-1)
+
         attn_output, _ = self.self_attn(x, x, x)
         x = x + attn_output
+
+        x = torch.nn.utils.rnn.pack_padded_sequence(x, mask, batch_first=True, enforce_sorted=False)
+        # Apply GRU
         x, _ = self.gru(x)
+        x, mask = torch.nn.utils.rnn.pad_packed_sequence(x, batch_first=True, total_length=MS_MAX_LEN)
+
         x = self.dropout(x)
 
         return x
