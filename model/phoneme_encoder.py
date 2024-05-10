@@ -115,8 +115,11 @@ class PhonemeEncoder(torch.nn.Module):
             x = self.activation(x)
 
         x = x.permute(0, 2, 1)
+        mask = torch.sum((x != 0).float(), axis=-1)
+        x = torch.nn.utils.rnn.pack_padded_sequence(x, mask, batch_first=True)
         # Apply GRU
         x, _ = self.gru(x)
+        x, mask = torch.nn.utils.rnn.pad_packed_sequence(x, batch_first=True)
         x = self.dropout(x)
 
         return x
