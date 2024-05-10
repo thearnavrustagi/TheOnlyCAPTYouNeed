@@ -45,10 +45,10 @@ class PhonemeDecoder(nn.Module):
         self.dropout = nn.Dropout(p=dropout)
 
     def forward(self, x):
-        mask = torch.squeeze(torch.sum((x != 0).float(), axis=-2))
-        mask = torch.sum((mask != 0).float(), axis=-1)
-        device = "mps" if torch.backends.mps.is_available() else "cpu"
-        mask = mask.to("cpu")
+        #mask = torch.squeeze(torch.sum((x != 0).float(), axis=-2))
+        #mask = torch.sum((mask != 0).float(), axis=-1)
+        #device = "mps" if torch.backends.mps.is_available() else "cpu"
+        #mask = mask.to("cpu")
 
         attn_output, _ = self.self_attn(x, x, x)
         x = x + attn_output

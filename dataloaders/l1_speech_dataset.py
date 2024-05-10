@@ -27,9 +27,11 @@ class L1SpeechDataset(Dataset):
         )
         self.audio_files = glob(f"{self.audio_files_path}/*")
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx,):
         base_idx = idx // 5
         version_idx = idx % 5
+        if self.split == "test":
+            version_idx = 0
         file_id = self.transcript_df["file_identifier"].iloc[base_idx]
         filename = f"{self.audio_files_path}/{file_id}-v{version_idx}.npy"
         mask = self.transcript_df["file_identifier"] == file_id
@@ -42,4 +44,6 @@ class L1SpeechDataset(Dataset):
         return (ms_scaled, np.array(error_p), tokenize(sentence))
 
     def __len__(self):
+        if self.split == "test":
+            return len(self.transcript_df)
         return len(self.transcript_df) * 5

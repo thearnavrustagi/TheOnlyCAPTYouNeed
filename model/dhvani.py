@@ -1,7 +1,7 @@
 import torch
 import random
 import numpy as np
-from .utils import train_one_epoch
+from .utils import train_one_epoch, test_model
 from .models import MispronunciationDetectionNetwork, PhonemeRecognitionNetwork
 from .models import MDNClassificationHead, PRNClassificationHead
 from .hyperparameters import N_EPOCHS, PRN_CLF_OUT_DIM, LR, SEED, MDN_CLF_OUT_DIM
@@ -46,7 +46,7 @@ class Dhvani(torch.nn.Module):
 
         return prn_out, mdn_out
 
-    def train(
+    def train_model(
         self,
         dataloaders,
         *,
@@ -127,7 +127,21 @@ class Dhvani(torch.nn.Module):
                     fold=fold_no,
                     task="MDN",
                 )
-
+    def test_model(
+        self,
+        dataloader,
+        *,
+        fold_no=None,
+    ):
+        test_model(
+            self.phoneme_recognition_network,
+            dataloader,
+            xidx=0,
+            yidx=2,
+            classes=PRN_CLF_OUT_DIM,
+            fold=fold_no,
+            task="PRN"
+        )
 
 if __name__ == "__main__":
     pass

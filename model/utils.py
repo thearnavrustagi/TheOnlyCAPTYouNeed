@@ -201,3 +201,51 @@ def train_one_epoch(
         writer.writerows(np.column_stack(vals))
 
     return tuple(metrics)
+
+def test_model(
+    model,
+    dataloader,
+    *,
+    xidx=0,
+    yidx=1,
+    classes=None,
+    dirname="./logs",
+    model_dir="./saved_models",
+    fold=1,
+    task=None,
+):
+    progress_bar = tqdm(dataloader)
+
+    if classes:
+        metrics = MetricEvaluater.create_metric_store()
+
+    device = "mps" if torch.backends.mps.is_available() else "cpu"
+    model.to(device)
+    for data in progress_bar:
+        status_text = f"[{task}] "
+        X, y_old = data[xidx], data[yidx]
+
+        y_pred = model(X.to(device)).to("cpu")
+        y = one_hot_encode(y_old, unique_classes=classes)
+
+        if classes:
+            MetricEvaluater.evaluate(metrics, y_pred=y_pred, y=y, n_classes=classes)
+            status_text += f"f1: {mean(metrics['f1_score']):.4f}; "
+            status_text += f"recall: {mean(metrics['recall']):.4f}; "
+            status_text += f"prec: {mean(metrics['precision']):.4f}; "
+            status_text += f"acc: {mean(metrics['accuracy']):.4f} "
+        progress_bar.set_description(status_text)
+
+    with open(
+        f"{dirname}/{task}_test_fold-{fold}.csv",
+        "w+",
+    ) as file:
+        writer = csv.writer(file)
+        keys = list(metrics.keys())
+        vals = [[] for _ in range(len(keys))]
+        writer.writerow(keys)
+        for key, val in metrics.items():
+            vals[keys.index(key)] = val
+        writer.writerows(np.column_stack(vals))
+
+    return tuple(metrics)
